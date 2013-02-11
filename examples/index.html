@@ -50,6 +50,40 @@
             .skip("two")
             .begin();
 
+    $.Flow("thirdFlow")
+            .step("one", function() {
+                var deferred = $.Deferred();
+                setTimeout(function() {
+                    console.log("flow 3, step 1...");
+                    deferred.resolve();
+                }, 301);
+
+                return deferred;
+
+            })
+            .step("two", function() {
+                var deferred = $.Deferred();
+                setTimeout(function() {
+                    console.log("flow 3, step 2...");
+                    deferred.resolve();
+                }, 200);
+
+                return deferred;
+            })
+            .step("three", function() {
+                var deferred = $.Deferred();
+                setTimeout(function() {
+                    console.log("flow 3, step 3...");
+                    deferred.resolve();
+                }, 100);
+
+                return deferred;
+            })
+            .waterfall()
+            .begin();
+
+    $.Flow("thirdFlow").parallel().begin();
+
 
 
 

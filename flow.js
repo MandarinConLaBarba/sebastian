@@ -18,7 +18,8 @@
     }
 }(this, function(root, Flow, $) {
 
-    var flows = {};
+    var flows = {},
+        defaultMode = "waterfall";
 
     //flow factory/getter
     Flow = function(name) {
@@ -225,6 +226,55 @@
                     }
 
                 },
+
+                mode : "waterfall",
+
+                modes : {
+
+                    /**
+                     *
+                     */
+                    waterfall : function(ctx, stepsToExecute) {
+
+                        return _.reduce(stepsToExecute, function(promise, step) {
+                            /**
+                             * If not a promise object, means we're on the first step.
+                             * Call the first step using $.when(), which always returns a promise, regardless of whether the function
+                             * passed returns one.
+                             */
+                            if (!promise.then) {
+                                promise = $.when(promise.callback.call(ctx));
+                            }
+
+                            /**
+                             * Attach the step as success callback to the promise
+                             */
+                            return $.when(promise).then(function(result) {
+                                return step.callback.call(ctx, result);
+                            });
+                        });
+
+                    },
+
+                    parallel : function(ctx, stepsToExecute) {
+                        var promises = [];
+                        for (var index in stepsToExecute) {
+                            promises.push(stepsToExecute[index].callback.call(ctx));
+                        }
+
+                        return $.when.apply(null, promises);
+                    }
+                },
+
+                parallel : function() {
+                    this.mode = "parallel";
+                    return this;
+                },
+                waterfall : function() {
+                    this.mode = "waterfall";
+                    return this;
+                },
+
                 /**
                  * Begin the flow
                  *
@@ -236,6 +286,7 @@
                         stepsToExecute = [],
                         stepStartIndex = 0;
 
+                    //get the starting step index
                     if (this.startingStep) {
                         _.each(this.steps, function(step, indx) {
                             if (self.startingStep === step.name) {
@@ -244,8 +295,7 @@
                         });
                     }
 
-                    //get the starting step index
-
+                    //build execution plan
                     for (var i = 0; i < this.steps.length; i++)
                     {
                         if (i < stepStartIndex || self.skipSteps.indexOf(self.steps[i].name) >= 0) {
@@ -265,24 +315,7 @@
                     if (stepsToExecute.length === 1) {
                         promise = $.when(stepsToExecute[0].callback.call(ctx));
                     } else {
-                        promise = _.reduce(stepsToExecute, function(promise, step) {
-                            /**
-                             * If not a promise object, means we're on the first step.
-                             * Call the first step using $.when(), which always returns a promise, regardless of whether the function
-                             * passed returns one.
-                             */
-                            if (!promise.then) {
-                                promise = $.when(promise.callback.call(ctx));
-                            }
-
-                            /**
-                             * Attach the step as success callback to the promise
-                             */
-                            return $.when(promise).then(function(result) {
-                                return step.callback.call(ctx, result);
-                            });
-                        });
-
+                        promise = this.modes[this.mode](ctx, stepsToExecute);
                     }
 
                     //attach failure callback wrapper...this will get the failure result and decide whether to invoke conditional
@@ -315,6 +348,7 @@
         //start over with skipped steps and starting steps..
         flows[name].skipSteps = [];
         flows[name].startingStep = [];
+        flows[name].mode = defaultMode;
 
         return flows[name];
 
