@@ -236,6 +236,14 @@
                         stepsToExecute = [],
                         stepStartIndex = 0;
 
+                    if (this.startingStep) {
+                        _.each(this.steps, function(step, indx) {
+                            if (self.startingStep === step.name) {
+                                stepStartIndex = indx;
+                            }
+                        });
+                    }
+
                     //get the starting step index
 
                     for (var i = 0; i < this.steps.length; i++)
@@ -303,6 +311,10 @@
                 }
             });
         }
+
+        //start over with skipped steps and starting steps..
+        flows[name].skipSteps = [];
+        flows[name].startingStep = [];
 
         return flows[name];
 

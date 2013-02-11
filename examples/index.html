@@ -40,10 +40,17 @@
     $.Flow("secondFlow").onFailure().jumpTo("firstFlow").begin();
 
 
-    console.log("beginning flow one, skipping step one");
+    console.log("beginning flow one, starting on step two");
     $.Flow("firstFlow")
-            .skip("one")
+            .startOn("two")
             .begin();
+
+    console.log("beginning flow one, skipping step two");
+    $.Flow("firstFlow")
+            .skip("two")
+            .begin();
+
+
 
 
 
