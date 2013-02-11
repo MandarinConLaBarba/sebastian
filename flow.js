@@ -9,7 +9,7 @@
         define(['jquery', 'exports'], function($, exports) {
             // Export global even in AMD case in case this script is loaded with
             // others that may still expect a global Backbone.
-            $.fn.Flow = factory(root, exports, $);
+            $.Flow = factory(root, exports, $);
 
         });
     } else {
