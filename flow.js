@@ -65,7 +65,7 @@
                  * The default fail flow. This is fired if no appropriate conditional fail flow is used.
                  *
                  */
-                defaultFaiDelegate : null,
+                defaultFailDelegate : null,
 
                 /**
                  * The default success flow. This is fired when the flow is resolved. Used to chain flows together
