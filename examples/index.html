@@ -1,0 +1,54 @@
+<html>
+<head>
+    <title>Example 1</title>
+</head>
+
+<body>
+
+<script type="text/javascript" src="vendor/jquery/jquery.min.js"></script>
+<script type="text/javascript" src="/flow.js"></script>
+
+<script type="text/javascript">
+
+
+    console.log("beginning flow one");
+    $.Flow("firstFlow")
+            .step("one", function() {
+                console.log("executing step one in firstFlow...");
+            })
+            .step("two", function() {
+                console.log("executing step two in firstFlow...");
+            }).begin();
+
+    console.log("beginning flow two");
+    $.Flow("secondFlow")
+            .step("one", function() {
+                console.log("executing step one...");
+                return $.Deferred().reject("blah");
+            })
+            .step("two", function() {
+                console.log("executing step two in second flow...");
+            }).onFailure("blah").handleWith(function() {
+                console.log("it failed!");
+            }).begin();
+
+
+    console.log("beginning flow two, chained to one on failure 'blah'");
+    $.Flow("secondFlow").onFailure("blah").jumpTo("firstFlow").begin();
+
+    console.log("beginning flow two, chained to one on failure ");
+    $.Flow("secondFlow").onFailure().jumpTo("firstFlow").begin();
+
+
+    console.log("beginning flow one, skipping step one");
+    $.Flow("firstFlow")
+            .skip("one")
+            .begin();
+
+
+
+</script>
+
+</body>
+
+</html>
