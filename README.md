@@ -1,4 +1,4 @@
-# jquery.flow - better name hopefully forthcoming
+# jquery.flow - better name forthcoming?
 
 ##Intro
 
@@ -68,7 +68,7 @@ This creates a flow called "helloFlow", adds to steps two the flow, and starts t
 
 To see all examples (Node.js) go [here](examples/node/)
 
-### To execute units of code sequentially
+### To execute units of code sequentially:
 
 ```
     flow("mockAsyncFlow")
