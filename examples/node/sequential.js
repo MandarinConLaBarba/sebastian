@@ -1,5 +1,5 @@
 var $ = require("jquery-deferred"),
-    flow = require("../flow").flow;
+    flow = require("../../flow").flow;
 
 flow("mockAsyncFlow")
     .step("one", function() {

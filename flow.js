@@ -189,7 +189,7 @@
                                 return;
                             }
 
-                            var flow = $.Flow(failureDelegate);
+                            var flow = Flow(failureDelegate);
 
                             flow.begin(ctx);
 
@@ -208,7 +208,7 @@
                     var self = this;
                     if (this.defaultSuccessDelegate) {
                         promise.then(function() {
-                            var flow = $.Flow(self.defaultSuccessDelegate);
+                            var flow = Flow(self.defaultSuccessDelegate);
                             flow.begin(ctx);
                         });
                     }
