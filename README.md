@@ -75,6 +75,8 @@ To see all examples (Node.js) go [here](examples/node/)
 
 ### To execute units of code sequentially:
 
+When flow is executed sequentially, result from each step is passed on to the next step.
+
 ```
     flow("mockAsyncFlow")
             .step("one", function() {
