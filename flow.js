@@ -2,7 +2,7 @@
     // Set up appropriately for the environment.
     if (typeof exports !== 'undefined') {
         // Node/CommonJS, need jQuery-deferred instead of regular jQuery
-        factory(root, exports, require('jquery-deferred'));
+        exports.flow = factory(root, {}, require('jquery-deferred'));
     } else if (typeof define === 'function' && define.amd) {
         // AMD
         define(['jquery', 'exports'], function($, exports) {
@@ -325,11 +325,10 @@
                     }
 
                     if (stepsToExecute.length === 0) {
-                        throw "There are no steps to execute in current execution plan.";
+                        return $.Deferred().reject("There are no steps to execute in current execution plan.");
                     }
 
                     var promise;
-
                     if (stepsToExecute.length === 1) {
                         promise = $.when(stepsToExecute[0].callback.call(ctx));
                     } else {
@@ -359,8 +358,13 @@
 
                     return this;
 
+                },
+                destroy : function () {
+                    delete flows[this.name];
                 }
             });
+
+            flows[name].name = name;
         }
 
         //start over with skipped steps and starting steps..
@@ -408,7 +412,7 @@
     // Handles objects with the built-in `forEach`, arrays, and raw objects.
     // Delegates to **ECMAScript 5**'s native `forEach` if available.
     var each = _.each = function(obj, iterator, context) {
-        if (obj == null) return;
+        if (obj === null) return;
         if (nativeForEach && obj.forEach === nativeForEach) {
             obj.forEach(iterator, context);
         } else if (obj.length === +obj.length) {
@@ -430,7 +434,7 @@
     // or `foldl`. Delegates to **ECMAScript 5**'s native `reduce` if available.
     _.reduce = function(obj, iterator, memo, context) {
         var initial = arguments.length > 2;
-        if (obj == null) obj = [];
+        if (obj === null) obj = [];
         if (nativeReduce && obj.reduce === nativeReduce) {
             if (context) iterator = _.bind(iterator, context);
             return initial ? obj.reduce(iterator, memo) : obj.reduce(iterator);

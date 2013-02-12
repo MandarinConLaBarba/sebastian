@@ -1,3 +1,4 @@
 .idea
 app.js
 examples/vendor/*
+node_modules/
