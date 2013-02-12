@@ -82,10 +82,14 @@
             .waterfall()
             .begin();
 
-    $.Flow("thirdFlow").parallel().begin();
+    $.Flow("thirdFlow")
+            .parallel()
+            .begin();
 
-
-
+    $.Flow("thirdFlow")
+            .parallel()
+            .onSuccess().jumpTo("firstFlow")
+            .begin();
 
 
 </script>

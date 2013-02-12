@@ -1,4 +1,3 @@
-
 (function(root, factory) {
     // Set up appropriately for the environment.
     if (typeof exports !== 'undefined') {
@@ -10,6 +9,8 @@
             // Export global even in AMD case in case this script is loaded with
             // others that may still expect a global Backbone.
             $.Flow = factory(root, exports, $);
+
+            return $.Flow;
 
         });
     } else {
@@ -105,6 +106,11 @@
                     };
                 },
 
+                /**
+                 * Add success condition flows
+                 *
+                 * @return {Object}
+                 */
                 onSuccess : function() {
                     var self = this;
                     return {
@@ -154,6 +160,12 @@
 
                 },
 
+                /**
+                 * Attach flows on failure
+                 *
+                 * @param promise
+                 * @param ctx
+                 */
                 attachFailDelegate : function(promise, ctx) {
 
                     var self = this;
@@ -186,6 +198,12 @@
 
                 },
 
+                /**
+                 * Attach flows on success
+                 *
+                 * @param promise
+                 * @param ctx
+                 */
                 attachSuccessDelegate : function(promise, ctx) {
                     var self = this;
                     if (this.defaultSuccessDelegate) {
