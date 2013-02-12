@@ -64,6 +64,11 @@ This creates a flow called "helloFlow", adds to steps two the flow, and starts t
 
 ```
 
+## Tests/Specs
+
+* [Tests](test/index.js)
+* [Specs](test/spec.md)
+
 ## Examples
 
 To see all examples (Node.js) go [here](examples/node/)
