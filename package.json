@@ -1,6 +1,10 @@
 {
     "name" : "sebastian",
     "version":"0.0.1",
+    "scripts":
+    {
+        "test":"make test"
+    },
     "dependencies":
     {
         "jquery-deferred":"0.3.0"
