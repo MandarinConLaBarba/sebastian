@@ -23,7 +23,7 @@ to treat asynchronous and synchronous steps/code the same.
 ### To use as a Node.js module:
 
 ```
-var flow = require("flow").flow;
+var flow = require("sebastian").flow;
 
 flow("helloFlow")
     .step("one", function() {
@@ -57,7 +57,7 @@ This creates a flow called "helloFlow", adds to steps two the flow, and starts t
 
 ```
 <script type="text/javascript" src="vendor/jquery/jquery.min.js"></script>
-<script type="text/javascript" src="/flow.js"></script>
+<script type="text/javascript" src="/sebastian.js"></script>
 
 <script type="text/javascript">
 
