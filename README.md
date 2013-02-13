@@ -1,9 +1,22 @@
-# jquery.flow - better name forthcoming?
+# Sebastian
 
 ##Intro
 
-jquery.flow is a flow control library aimed at encouraging developers to write organized, testable code. It works in the browser
+Sebastian is a flow control library aimed at encouraging developers to write organized, testable code. It works in the browser
 or with Node.js.
+
+## Rationale
+
+There are many flow-control libraries out there, but none that I am quite satisfied with at the moment. [Async](https://github.com/caolan/async)
+is great, but I don't agree with Node.js-style callback conventions and I don't like mixing success and error condition
+logic. Also, I have found Async-wrapped code to be difficult to test. Sebastian is built to encourage construction of discrete chunks
+of manageable code that can be easily tested. I'm a big fan of Deferreds. Sebastian uses jQuery Deferred $.when() wrapper
+to treat asynchronous and synchronous steps/code the same.
+
+## Dependencies
+
+* For Node.js, [jquery-deferred](https://github.com/zzdhidden/node-jquery-deferred), but Q support may be added at a later date.
+* For browser environments, jQuery.
 
 ## Getting started
 
