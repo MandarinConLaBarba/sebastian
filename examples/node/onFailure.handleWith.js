@@ -1,5 +1,5 @@
 var $ = require("jquery-deferred"),
-    flow = require("../../flow").flow;
+    flow = require("../../sebastian").flow;
 
 flow("secondFlow")
     .step("one", function() {

@@ -2,7 +2,7 @@ var $ = require("jquery-deferred"),
     _ = require("underscore"),
     sinon = require("sinon"),
     should = require("should"),
-    flow = require("../flow").flow;
+    flow = require("../sebastian").flow;
 
 describe("flow", function(){
 

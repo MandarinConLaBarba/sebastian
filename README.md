@@ -38,10 +38,10 @@ This creates a flow called "helloFlow", adds to steps two the flow, and starts t
 ### To use with an AMD module loader (only tested w/ RequireJS):
 
 ```
-    require(["jquery", "path/to/flow"], function($, flow) {
+    require(["jquery", "path/to/sebastian"], function($, sebastian) {
 
         //call the local definition
-        flow("blah")
+        sebastian("blah")
                 .step("one", function() {
                     console.log("step one..");
                 })
@@ -49,9 +49,6 @@ This creates a flow called "helloFlow", adds to steps two the flow, and starts t
                     console.log("step two..");
                 })
                 .begin();
-
-        //jQuery syntax
-        $.Flow("blah").begin();
 
     });
 ```

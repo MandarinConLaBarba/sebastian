@@ -21,10 +21,10 @@
         }
     });
 
-    require(["jquery", "../flow"], function($, flow) {
+    require(["jquery", "../sebastian"], function($, sebastian) {
 
         //call the local definition
-        flow("blah")
+        sebastian.flow("blah")
                 .step("one", function() {
                     console.log("step one..");
                 })
@@ -32,9 +32,6 @@
                     console.log("step two..");
                 })
                 .begin();
-
-        //jQuery syntax
-        $.Flow("blah").begin();
 
     });
 
