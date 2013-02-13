@@ -1,6 +1,14 @@
 {
     "name" : "sebastian",
     "version":"0.0.2",
+    "keywords": [
+        "sebastian",
+        "flow-control",
+        "flow",
+        "deferred",
+        "promise"
+    ],
+    "author" : "Mandarin Drummond (http://mandarindrummond.com)",
     "scripts":
     {
         "test":"make test"
