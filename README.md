@@ -20,7 +20,13 @@ to treat asynchronous and synchronous steps/code the same.
 
 ## Getting started
 
-### To use as a Node.js module:
+### To use as a Node.js module, install with NPM, or add as a dependency in your package.json.
+
+```
+npm install sebastian
+```
+
+Then, require the module and add a flow:
 
 ```
 var flow = require("sebastian").flow;
