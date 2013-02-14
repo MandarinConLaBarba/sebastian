@@ -266,8 +266,8 @@
                             /**
                              * Attach the step as success callback to the promise
                              */
-                            return $.when(promise).then(function(result) {
-                                return step.callback.call(ctx, result);
+                            return $.when(promise).then(function() {
+                                return step.callback.apply(ctx, [].slice.call(arguments));
                             });
                         });
 

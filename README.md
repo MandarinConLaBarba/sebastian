@@ -47,7 +47,7 @@ This creates a flow called "helloFlow", adds to steps two the flow, and starts t
     require(["jquery", "path/to/sebastian"], function($, sebastian) {
 
         //call the local definition
-        sebastian("blah")
+        sebastian.flow("blah")
                 .step("one", function() {
                     console.log("step one..");
                 })

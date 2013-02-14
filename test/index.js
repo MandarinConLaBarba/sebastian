@@ -227,4 +227,215 @@ describe("flow", function(){
 
     });
 
+    describe("startOn", function(){
+
+        beforeEach(function() {
+            this.result = target.startOn("someStepName");
+        });
+
+        it("should set the startingStep property", function() {
+
+            target.startingStep.should.equal("someStepName");
+
+        });
+
+        it("should return the flow", function(){
+
+            target.should.equal(this.result);
+
+        });
+    });
+
+    describe("skip", function(){
+
+        beforeEach(function() {
+            this.result = target.skip("someSkippedStep");
+        });
+
+
+        it("should push the skipped step name to the skipSteps property", function() {
+
+            target.skipSteps.indexOf("someSkippedStep").should.not.be.below(0);
+
+        });
+
+        it("should return the flow", function(){
+
+            this.result.should.equal(this.result);
+
+        });
+    });
+
+    describe("waterfall", function(){
+
+        beforeEach(function() {
+            this.result = target.waterfall();
+        });
+
+        it("should set the mode property to waterfall", function() {
+
+            target.mode.should.equal("waterfall");
+
+        });
+
+        it("should return the flow", function(){
+
+            this.result.should.equal(this.result);
+
+        });
+    });
+
+    describe("parallel", function(){
+
+        beforeEach(function() {
+            this.result = target.parallel();
+        });
+
+        it("should set the mode property to parallel", function() {
+
+            target.mode.should.equal("parallel");
+
+        });
+
+        it("should return the flow", function(){
+
+            this.result.should.equal(this.result);
+
+        });
+    });
+
+    describe("modes", function(){
+
+        describe("waterfall", function(){
+
+            beforeEach(function() {
+
+                this.stubbedSteps = {
+                    one : sinon.stub(),
+                    two : sinon.stub()
+                };
+
+                this.stepsToExecute = [
+                    {
+                        name : "one",
+                        callback : this.stubbedSteps.one
+                    },
+                    {
+                        name : "two",
+                        callback : this.stubbedSteps.two
+                    }];
+
+            });
+
+            describe("when all steps resolve", function(){
+
+                beforeEach(function() {
+
+                    _.each(this.stubbedSteps, function(stub) {
+                        stub.returns($.Deferred().resolve());
+                    });
+
+                    target.modes.waterfall(null, this.stepsToExecute);
+
+                });
+
+                it("should call all steps", function() {
+
+                    _.each(this.stubbedSteps, function(stub) {
+                        stub.called.should.be.true;
+                    });
+
+                });
+
+
+                it("should call the steps in order", function(){
+
+                    this.stubbedSteps.one.calledBefore(this.stubbedSteps.two);
+
+                });
+
+            });
+
+            it("should not call downstream steps until upstream steps are resolved", function(){
+
+                var stepOneDeferred = $.Deferred(),
+                    stepTwoDeferred = $.Deferred();
+
+                this.stubbedSteps.one.returns(stepOneDeferred);
+                this.stubbedSteps.two.returns(stepTwoDeferred);
+
+                target.modes.waterfall(null, this.stepsToExecute);
+
+                this.stubbedSteps.two.called.should.be.false;
+
+                stepOneDeferred.resolve();
+
+                this.stubbedSteps.two.called.should.be.true;
+
+
+            });
+
+            it("should not call downstream steps if upstream steps rejected", function(){
+
+
+                var stepOneDeferred = $.Deferred(),
+                    stepTwoDeferred = $.Deferred();
+
+                this.stubbedSteps.one.returns(stepOneDeferred);
+                this.stubbedSteps.two.returns(stepTwoDeferred);
+
+                target.modes.waterfall(null, this.stepsToExecute);
+
+                this.stubbedSteps.two.called.should.be.false;
+
+                stepOneDeferred.reject();
+
+                this.stubbedSteps.one.called.should.be.true;
+                this.stubbedSteps.two.called.should.be.false;
+
+
+            });
+
+            it("should pass single result argument from upstream step to downstream step", function(){
+
+                var stepOneDeferred = $.Deferred(),
+                    stepTwoDeferred = $.Deferred();
+
+                this.stubbedSteps.one.returns(stepOneDeferred);
+                this.stubbedSteps.two.returns(stepTwoDeferred);
+
+                target.modes.waterfall(null, this.stepsToExecute);
+
+                this.stubbedSteps.two.called.should.be.false;
+
+                stepOneDeferred.resolve("someArg");
+
+                this.stubbedSteps.two.calledWith("someArg").should.be.true;
+
+
+            });
+
+            it("should pass multiple result arguments from upstream step to downstream step", function(){
+
+                var stepOneDeferred = $.Deferred(),
+                    stepTwoDeferred = $.Deferred();
+
+                this.stubbedSteps.one.returns(stepOneDeferred);
+                this.stubbedSteps.two.returns(stepTwoDeferred);
+
+                target.modes.waterfall(null, this.stepsToExecute);
+
+                this.stubbedSteps.two.called.should.be.false;
+
+                stepOneDeferred.resolve("someArg", "someArg2");
+
+                this.stubbedSteps.two.firstCall.args[0].should.equal("someArg");
+                this.stubbedSteps.two.firstCall.args[1].should.equal("someArg2");
+
+
+            });
+        });
+
+    });
+
 });
