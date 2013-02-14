@@ -8,6 +8,13 @@
          - [and the execution mode is parallel](#flow-begin-when-there-are-two-or-more-steps-in-the-flow-and-the-execution-mode-is-parallel)
          - [and a startOn step has been specified](#flow-begin-when-there-are-two-or-more-steps-in-the-flow-and-a-starton-step-has-been-specified)
          - [and a skip step has been specified](#flow-begin-when-there-are-two-or-more-steps-in-the-flow-and-a-skip-step-has-been-specified)
+     - [startOn](#flow-starton)
+     - [skip](#flow-skip)
+     - [waterfall](#flow-waterfall)
+     - [parallel](#flow-parallel)
+     - [modes](#flow-modes)
+       - [waterfall](#flow-modes-waterfall)
+         - [when all steps resolve](#flow-modes-waterfall-when-all-steps-resolve)
 <a name="" />
  
 <a name="flow" />
@@ -151,5 +158,155 @@ should execute steps that were not skipped.
 
 ```js
 target.step("one").callback.called.should.be.true;
+```
+
+<a name="flow-starton" />
+## startOn
+should set the startingStep property.
+
+```js
+target.startingStep.should.equal("someStepName");
+```
+
+should return the flow.
+
+```js
+target.should.equal(this.result);
+```
+
+<a name="flow-skip" />
+## skip
+should push the skipped step name to the skipSteps property.
+
+```js
+target.skipSteps.indexOf("someSkippedStep").should.not.be.below(0);
+```
+
+should return the flow.
+
+```js
+this.result.should.equal(this.result);
+```
+
+<a name="flow-waterfall" />
+## waterfall
+should set the mode property to waterfall.
+
+```js
+target.mode.should.equal("waterfall");
+```
+
+should return the flow.
+
+```js
+this.result.should.equal(this.result);
+```
+
+<a name="flow-parallel" />
+## parallel
+should set the mode property to parallel.
+
+```js
+target.mode.should.equal("parallel");
+```
+
+should return the flow.
+
+```js
+this.result.should.equal(this.result);
+```
+
+<a name="flow-modes" />
+## modes
+<a name="flow-modes-waterfall" />
+### waterfall
+should not call downstream steps until upstream steps are resolved.
+
+```js
+var stepOneDeferred = $.Deferred(),
+                    stepTwoDeferred = $.Deferred();
+
+                this.stubbedSteps.one.returns(stepOneDeferred);
+                this.stubbedSteps.two.returns(stepTwoDeferred);
+
+                target.modes.waterfall(null, this.stepsToExecute);
+
+                this.stubbedSteps.two.called.should.be.false;
+
+                stepOneDeferred.resolve();
+
+                this.stubbedSteps.two.called.should.be.true;
+```
+
+should not call downstream steps if upstream steps rejected.
+
+```js
+var stepOneDeferred = $.Deferred(),
+                    stepTwoDeferred = $.Deferred();
+
+                this.stubbedSteps.one.returns(stepOneDeferred);
+                this.stubbedSteps.two.returns(stepTwoDeferred);
+
+                target.modes.waterfall(null, this.stepsToExecute);
+
+                this.stubbedSteps.two.called.should.be.false;
+
+                stepOneDeferred.reject();
+
+                this.stubbedSteps.one.called.should.be.true;
+                this.stubbedSteps.two.called.should.be.false;
+```
+
+should pass single result argument from upstream step to downstream step.
+
+```js
+var stepOneDeferred = $.Deferred(),
+                    stepTwoDeferred = $.Deferred();
+
+                this.stubbedSteps.one.returns(stepOneDeferred);
+                this.stubbedSteps.two.returns(stepTwoDeferred);
+
+                target.modes.waterfall(null, this.stepsToExecute);
+
+                this.stubbedSteps.two.called.should.be.false;
+
+                stepOneDeferred.resolve("someArg");
+
+                this.stubbedSteps.two.calledWith("someArg").should.be.true;
+```
+
+should pass multiple result arguments from upstream step to downstream step.
+
+```js
+var stepOneDeferred = $.Deferred(),
+                    stepTwoDeferred = $.Deferred();
+
+                this.stubbedSteps.one.returns(stepOneDeferred);
+                this.stubbedSteps.two.returns(stepTwoDeferred);
+
+                target.modes.waterfall(null, this.stepsToExecute);
+
+                this.stubbedSteps.two.called.should.be.false;
+
+                stepOneDeferred.resolve("someArg", "someArg2");
+
+                this.stubbedSteps.two.firstCall.args[0].should.equal("someArg");
+                this.stubbedSteps.two.firstCall.args[1].should.equal("someArg2");
+```
+
+<a name="flow-modes-waterfall-when-all-steps-resolve" />
+#### when all steps resolve
+should call all steps.
+
+```js
+_.each(this.stubbedSteps, function(stub) {
+                        stub.called.should.be.true;
+                    });
+```
+
+should call the steps in order.
+
+```js
+this.stubbedSteps.one.calledBefore(this.stubbedSteps.two);
 ```
 
