@@ -77,6 +77,22 @@ describe("flow", function(){
 
         });
 
+        describe("when a ctx argument is passed", function(){
+
+            beforeEach(function() {
+                this.ctx = sinon.stub();
+                this.result = target
+                    .step("one", sinon.stub())
+                    .begin(this.ctx);
+            });
+
+            it("should call the steps on the ctx argument", function() {
+
+                target.step("one").callback.calledOn(this.ctx).should.be.true;
+
+            });
+        });
+
         describe("when there are no steps in the flow", function(){
 
             beforeEach(function() {
@@ -343,6 +359,70 @@ describe("flow", function(){
             this.result.should.equal(this.result);
 
         });
+    });
+
+    describe("onFailure", function(){
+
+        describe("loop", function(){
+
+            describe("when there is an onFailure argument", function(){
+
+                beforeEach(function() {
+                    target.onFailure("blah").loop();
+                });
+
+                it("should itself to the conditionalFailDelegates object", function() {
+
+                    target.conditionalFailDelegates.blah.should.equal(target);
+
+                });
+            });
+
+            describe("when there is NOT an onFailure argument", function(){
+
+                beforeEach(function() {
+                    target.onFailure().loop();
+                });
+
+                it("should set the defaultFailDelegate", function() {
+
+                    target.defaultFailDelegate.should.equal(target);
+
+                });
+            });
+
+        });
+
+        describe("jumpTo", function(){
+
+            describe("when there is an argument to onFailure", function(){
+
+                beforeEach(function() {
+                    target.onFailure("blah").jumpTo(flow("secondFlow"));
+                });
+
+                it("should add an object to the conditionalFailDelegates object", function() {
+
+                    target.conditionalFailDelegates.blah.should.equal(flow("secondFlow"));
+
+                });
+            });
+
+            describe("when there is NOT an argument to onFailure", function(){
+
+                beforeEach(function() {
+                    target.onFailure().jumpTo(flow("secondFlow"));
+                });
+
+                it("should set the defaultFailDelegate", function() {
+
+                    target.defaultFailDelegate.should.equal(flow("secondFlow"));
+
+                });
+            });
+
+        });
+
     });
 
     describe("modes", function(){

@@ -81,7 +81,16 @@
                  * @return {Object}
                  */
                 onFailure : function(responseCode) {
-                    var self = this;
+
+                    var self = this,
+                        storeDelegate = function(flow) {
+                            if (responseCode) {
+                                self.conditionalFailDelegates[responseCode] = flow;
+                            } else {
+                                self.defaultFailDelegate = flow;
+                            }
+                            return self;
+                        };
 
                     return {
                         handleWith : function(callback) {
@@ -93,14 +102,11 @@
 
                             return self;
                         },
+                        loop : function() {
+                            return storeDelegate(self);
+                        },
                         jumpTo : function(flow) {
-                            if (responseCode) {
-                                self.conditionalFailDelegates[responseCode] = flow;
-                            } else {
-                                self.defaultFailDelegate = flow;
-                            }
-
-                            return self;
+                            return storeDelegate(flow);
                         }
                     };
                 },
@@ -111,7 +117,9 @@
                  * @return {Object}
                  */
                 onSuccess : function() {
+
                     var self = this;
+
                     return {
                         jumpTo : function(flow) {
                             self.defaultSuccessDelegate = flow;
