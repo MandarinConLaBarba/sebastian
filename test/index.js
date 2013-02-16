@@ -7,8 +7,7 @@ var $ = require("jquery-deferred"),
 describe("flow", function(){
 
     var wrappedStubs = {},
-        target,
-        pureStubs = {};
+        target;
 
     beforeEach(function() {
 
@@ -29,7 +28,8 @@ describe("flow", function(){
         describe("in general", function(){
 
             beforeEach(function() {
-                this.result = target.step("one", sinon.stub());
+                this.stepOneCallback = sinon.stub();
+                this.result = target.step("one", this.stepOneCallback);
             });
 
             it("should return the flow object", function() {
@@ -37,6 +37,52 @@ describe("flow", function(){
                 this.result.should.equal(target);
 
             });
+        });
+
+        describe("when one argument passed", function(){
+
+            describe("when the argument is a string", function(){
+
+                beforeEach(function() {
+
+                    this.stepOneCallback = sinon.stub();
+                    target.step("one", this.stepOneCallback);
+
+                    this.result = target.step("one");
+                });
+
+
+                it("should return the step", function() {
+
+                    this.result.callback.should.equal(this.stepOneCallback);
+
+                });
+
+                it("should not add a step to the steps array", function(){
+
+                    target.steps.length.should.equal(1);
+
+                });
+            });
+
+            describe("when the argument is a function", function(){
+                beforeEach(function() {
+                    this.stepCallback = sinon.stub();
+                    target.step(this.stepCallback);
+                });
+
+                it("should create a new object in the steps array with a name in format of 'step.{length}'", function() {
+
+                    var self = this;
+                    var found = _.find(target.steps, function(step) {
+                        return step.callback = self.stepCallback;
+                    });
+
+                    found.name.should.equal("step." + (target.steps.length));
+
+                });
+            });
+
         });
 
         describe("when two arguments passed", function(){
@@ -48,13 +94,21 @@ describe("flow", function(){
 
             describe("when the second argument is a function", function(){
 
-                it("should create a new object in the steps array with a name and callback property", function() {
-
-                    var found = _.find(target.steps, function(step) {
+                beforeEach(function() {
+                    this.found = _.find(target.steps, function(step) {
                         return step.name === "one";
                     });
+                });
 
-                    found.callback();
+                it("should create a new object in the steps array with a name", function() {
+
+                    this.found.name.should.equal("one");
+
+                });
+
+                it("should create a new object in the steps array with a callback", function() {
+
+                    this.found.callback();
 
                     this.callbackStub.called.should.be.true;
 

@@ -222,10 +222,14 @@
                 },
 
                 /**
-                 * Get or set a step.
+                 * Get or set a step. If only a function/flow is passed a step name will be created in the format of
                  *
-                 * @param name the name of the step
-                 * @param callback the step callback/logic. If this is falsey, the function acts as a getter, otherwise it's a setter
+                 * 'step.{n}'
+                 *
+                 * For example, step.1, step.2, step.3, etc
+                 *
+                 * @param name the name of the step or a step callback (when no name is specified)
+                 * @param callback the step callback/flow. If this is falsey and first arg is a string the function acts as a getter, otherwise it's a setter
                  * @return {*}
                  */
                 step : function(name, callback) {
@@ -236,6 +240,11 @@
                             callback : callback
                         });
                         return this;
+                    } else if (typeof name === "function" || typeof name === "object"){
+                        this.steps.push({
+                            name : "step." + (this.steps.length + 1),
+                            callback : name
+                        });
                     } else {
                         var foundStep,
                             self = this;
@@ -259,7 +268,7 @@
                     /**
                      *
                      */
-                    waterfall : function(ctx, stepsToExecute) {
+                    waterfall : function(ctx, stepsToExecute, args) {
 
                         return _.reduce(stepsToExecute, function(promise, step) {
                             /**
@@ -268,7 +277,7 @@
                              * passed returns one.
                              */
                             if (!promise.then) {
-                                promise = $.when(promise.callback.call(ctx));
+                                promise = $.when(promise.callback.apply(ctx, args));
                             }
 
                             /**
@@ -281,10 +290,10 @@
 
                     },
 
-                    parallel : function(ctx, stepsToExecute) {
+                    parallel : function(ctx, stepsToExecute, args) {
                         var promises = [];
                         for (var index in stepsToExecute) {
-                            promises.push(stepsToExecute[index].callback.call(ctx));
+                            promises.push(stepsToExecute[index].callback.apply(ctx, args));
                         }
 
                         return $.when.apply(null, promises);
@@ -335,11 +344,12 @@
                         return $.Deferred().reject("There are no steps to execute in current execution plan.");
                     }
 
-                    var promise;
+                    var promise,
+                        args = [].slice.call(arguments).slice(1);
                     if (stepsToExecute.length === 1) {
-                        promise = $.when(stepsToExecute[0].callback.call(ctx));
+                        promise = $.when(stepsToExecute[0].callback.apply(ctx, args));
                     } else {
-                        promise = this.modes[this.mode](ctx, stepsToExecute);
+                        promise = this.modes[this.mode](ctx, stepsToExecute, args);
                     }
 
                     //attach failure callback wrapper...this will get the failure result and decide whether to invoke conditional
