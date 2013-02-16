@@ -23,6 +23,47 @@ describe("flow", function(){
         target.destroy();
 
     });
+    
+    describe("step", function(){
+
+        describe("in general", function(){
+
+            beforeEach(function() {
+                this.result = target.step("one", sinon.stub());
+            });
+
+            it("should return the flow object", function() {
+
+                this.result.should.equal(target);
+
+            });
+        });
+
+        describe("when two arguments passed", function(){
+
+            beforeEach(function() {
+                this.callbackStub = sinon.stub();
+                this.result = target.step("one", this.callbackStub);
+            });
+
+            describe("when the second argument is a function", function(){
+
+                it("should create a new object in the steps array with a name and callback property", function() {
+
+                    var found = _.find(target.steps, function(step) {
+                        return step.name === "one";
+                    });
+
+                    found.callback();
+
+                    this.callbackStub.called.should.be.true;
+
+                });
+            });
+
+        });
+    
+    });
 
     describe("begin", function(){
 
