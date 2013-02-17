@@ -131,13 +131,14 @@ describe("flow", function(){
 
         });
 
-        describe("when a ctx argument is passed", function(){
+        describe("when a context is specified", function(){
 
             beforeEach(function() {
                 this.ctx = sinon.stub();
                 this.result = target
                     .step("one", sinon.stub())
-                    .begin(this.ctx);
+                    .context(this.ctx)
+                    .begin();
             });
 
             it("should call the steps on the ctx argument", function() {

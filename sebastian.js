@@ -26,6 +26,13 @@
 
         if (!flows[name]) {
             flows[name] = Object.create({
+
+                /**
+                 * The 'this' context for the flow steps
+                 *
+                 */
+                ctx : null,
+
                 /**
                  * List of steps in the flow
                  *
@@ -131,9 +138,8 @@
                 /**
                  *
                  * @param promise
-                 * @param ctx
                  */
-                attachFailCallback : function(promise, ctx) {
+                attachFailCallback : function(promise) {
 
                     var self = this;
 
@@ -157,8 +163,8 @@
                         }
 
                         //If there's a context, invoke .call(ctx)
-                        if (ctx) {
-                            failureCallback.call(ctx, response);
+                        if (self.ctx) {
+                            failureCallback.call(self.ctx, response);
                             //Else call 'normally'
                         } else {
                             failureCallback(response);
@@ -171,9 +177,8 @@
                  * Attach flows on failure
                  *
                  * @param promise
-                 * @param ctx
                  */
-                attachFailDelegate : function(promise, ctx) {
+                attachFailDelegate : function(promise) {
 
                     var self = this;
 
@@ -196,9 +201,9 @@
                                 return;
                             }
 
-                            var flow = Flow(failureDelegate);
+                            var flow = Flow(failureDelegate).context(self.ctx);
 
-                            flow.begin(ctx);
+                            flow.begin();
 
                         });
                     }
@@ -209,14 +214,13 @@
                  * Attach flows on success
                  *
                  * @param promise
-                 * @param ctx
                  */
-                attachSuccessDelegate : function(promise, ctx) {
+                attachSuccessDelegate : function(promise) {
                     var self = this;
                     if (this.defaultSuccessDelegate) {
                         promise.then(function() {
                             var flow = Flow(self.defaultSuccessDelegate);
-                            flow.begin(ctx);
+                            flow.begin(self.ctx);
                         });
                     }
                 },
@@ -266,7 +270,12 @@
                 modes : {
 
                     /**
+                     * Execute the steps sequentially, and pass return value from upstream step to downstream step args
                      *
+                     * @param ctx
+                     * @param stepsToExecute
+                     * @param args pass to first step
+                     * @return {*}
                      */
                     waterfall : function(ctx, stepsToExecute, args) {
 
@@ -290,6 +299,14 @@
 
                     },
 
+                    /**
+                     * Execute all steps at once
+                     *
+                     * @param ctx
+                     * @param stepsToExecute
+                     * @param args passed to all steps
+                     * @return {*}
+                     */
                     parallel : function(ctx, stepsToExecute, args) {
                         var promises = [];
                         for (var index in stepsToExecute) {
@@ -300,10 +317,21 @@
                     }
                 },
 
+                /**
+                 * Set flow to execute in waterfall mode
+                 *
+                 * @return {*}
+                 */
                 parallel : function() {
                     this.mode = "parallel";
                     return this;
                 },
+
+                /**
+                 * Set flow to execute in parallel mode
+                 *
+                 * @return {*}
+                 */
                 waterfall : function() {
                     this.mode = "waterfall";
                     return this;
@@ -313,7 +341,7 @@
                  * Begin the flow
                  *
                  */
-                begin : function(ctx) {
+                begin : function() {
 
                     //generate flow plan based on starting step name and 'skipped' steps
                     var self = this,
@@ -347,28 +375,50 @@
                     var promise,
                         args = [].slice.call(arguments).slice(1);
                     if (stepsToExecute.length === 1) {
-                        promise = $.when(stepsToExecute[0].callback.apply(ctx, args));
+                        promise = $.when(stepsToExecute[0].callback.apply(self.ctx, args));
                     } else {
-                        promise = this.modes[this.mode](ctx, stepsToExecute, args);
+                        promise = this.modes[this.mode](self.ctx, stepsToExecute, args);
                     }
 
                     //attach failure callback wrapper...this will get the failure result and decide whether to invoke conditional
                     //callbacks or the general failure callback
-                    this.attachFailCallback(promise, ctx);
+                    this.attachFailCallback(promise);
 
                     //jump to any flows specified by 'jumpTo'
-                    this.attachFailDelegate(promise, ctx);
-                    this.attachSuccessDelegate(promise, ctx);
+                    this.attachFailDelegate(promise);
+                    this.attachSuccessDelegate(promise);
 
                     return promise;
 
                 },
 
+                /**
+                 * Specify the 'this' context for the flow
+                 *
+                 * @param obj
+                 */
+                context : function(obj) {
+                    this.ctx = obj;
+                    return this;
+                },
+
+                /**
+                 * Specify a step to start the flow on
+                 *
+                 * @param stepName
+                 * @return {*}
+                 */
                 startOn : function(stepName) {
                     this.startingStep = stepName;
                     return this;
                 },
 
+                /**
+                 * Specify a step to skip
+                 *
+                 * @param stepName
+                 * @return {*}
+                 */
                 skip : function(stepName) {
 
                     this.skipSteps.push(stepName);
@@ -376,6 +426,10 @@
                     return this;
 
                 },
+
+                /**
+                 * Remove the flow from the internal object
+                 */
                 destroy : function () {
                     delete flows[this.name];
                 }
