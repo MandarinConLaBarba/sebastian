@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Sebastian : Flow-control for Node.js and the browser." />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Sebastian</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/MandarinConLaBarba/sebastian">View on GitHub</a>
+
+          <h1 id="project_title">Sebastian</h1>
+          <h2 id="project_tagline">Flow-control for Node.js and the browser.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/MandarinConLaBarba/sebastian/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/MandarinConLaBarba/sebastian/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h3>What is Sebastian?</h3>
+
+<p>Sebastian is a small flow-control library that emphasizes writing small, test-friendly units of code. </p>
+
+<h2>Dependencies</h2>
+
+<ul>
+<li>For Node.js, <a href="https://github.com/zzdhidden/node-jquery-deferred">jquery-deferred</a>, but Q support may be added at a later date.</li>
+<li>For browser environments, jQuery.</li>
+</ul><h2>Getting started</h2>
+
+<h3>To use as a Node.js module, install with NPM, or add as a dependency in your package.json.</h3>
+
+<pre><code>npm install sebastian
+</code></pre>
+
+<p>Then, require the module and add a flow:</p>
+
+<pre><code>var flow = require("sebastian").flow;
+
+flow("helloFlow")
+    .step("one", function() {
+        console.log("hello..");
+    }).step("two", function() {
+        console.log("hello 2..");
+    }).begin();
+</code></pre>
+
+<p>This creates a flow called "helloFlow", adds to steps two the flow, and starts the flow.</p>
+
+<h3>To use with an AMD module loader (only tested w/ RequireJS):</h3>
+
+<pre><code>    require(["jquery", "path/to/sebastian"], function($, sebastian) {
+
+        //call the local definition
+        sebastian.flow("blah")
+                .step("one", function() {
+                    console.log("step one..");
+                })
+                .step("two", function() {
+                    console.log("step two..");
+                })
+                .begin();
+
+    });
+</code></pre>
+
+<h3>To use with old-school sequential script tags:</h3>
+
+<pre><code>&lt;script type="text/javascript" src="vendor/jquery/jquery.min.js"&gt;&lt;/script&gt;
+&lt;script type="text/javascript" src="/sebastian.js"&gt;&lt;/script&gt;
+
+&lt;script type="text/javascript"&gt;
+
+    $.Flow("firstFlow")
+            .step("one", function() {
+                console.log("executing step one in firstFlow...");
+            })
+            .step("two", function() {
+                console.log("executing step two in firstFlow...");
+            }).begin();
+
+
+&lt;/script&gt;
+
+</code></pre>
+
+<p><a href="examples/node">Check out the examples</a>.</p>
+
+<p>More soon..</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Sebastian maintained by <a href="https://github.com/MandarinConLaBarba">MandarinConLaBarba</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
