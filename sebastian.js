@@ -221,9 +221,11 @@
                                 return;
                             }
 
-                            var flow = Flow(failureDelegate).context(self.ctx);
+                            var flow = failureDelegate;
+                            flow = flow.flow ? flow : Flow(failureDelegate);
+                            flow.context(self.ctx)
+                                .begin();
 
-                            flow.begin();
 
                         });
                     }

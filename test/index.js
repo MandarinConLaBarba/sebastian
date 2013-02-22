@@ -220,7 +220,6 @@ describe("flow", function(){
 
                 });
 
-
                 it("should create a new object in the steps array with a " +
                     "callback that calls the flow's begin method", function() {
 
@@ -894,4 +893,92 @@ describe("flow", function(){
         });
     });
 
+
+    describe("attachFailDelegate", function(){
+
+        describe("when conditionalFailDelegates is truthy", function(){
+
+            beforeEach(function() {
+                this.promiseArg = {
+                    fail : sinon.stub()
+                };
+
+            });
+
+            it("should call the fail method on the promise argument", function() {
+
+                target.attachFailDelegate(this.promiseArg);
+
+                this.promiseArg.fail.called.should.be.true;
+
+
+            });
+
+            describe("when the fail callback is fired", function(){
+
+                describe("when no conditionalFailDelegate is matched using the fail callback response data", function(){
+
+                    describe("when there is a defaultFailDelegate", function(){
+
+                        beforeEach(function() {
+
+                            this.delegateFlow = flow("someDelegateFlow");
+
+                            sinon.stub(this.delegateFlow, "context");
+                            sinon.stub(this.delegateFlow, "begin");
+
+                            this.delegateFlow.context.returns(this.delegateFlow);
+
+                            this.promiseArg.fail.callsArg(0);
+
+                        });
+
+                        afterEach(function() {
+                            flow("someDelegateFlow").destroy();
+                        });
+
+
+                        describe("when defaultFailDelegate is a flow object", function(){
+
+                            beforeEach(function() {
+
+                                target.onFailure().jumpTo(this.delegateFlow);
+
+                                target.attachFailDelegate(this.promiseArg);
+                            });
+
+
+                            it("should call the begin method on the flow with name " +
+                                "that matches defaultFailDelegate", function() {
+
+                                this.delegateFlow.begin.called.should.be.true;
+
+                            });
+                        });
+
+                        describe("when defaultFailDelegate is a string", function(){
+
+                            beforeEach(function() {
+
+                                target.onFailure().jumpTo(this.delegateFlow.name);
+
+                                target.attachFailDelegate(this.promiseArg);
+                            });
+
+                            it("should call the begin method on the flow with name " +
+                                "that matches defaultFailDelegate", function() {
+
+
+                                this.delegateFlow.begin.called.should.be.true;
+
+                            });
+                        });
+
+                    });
+
+                });
+
+            });
+        });
+    });
 });
