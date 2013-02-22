@@ -7,6 +7,8 @@ var $ = require("jquery-deferred"),
 describe("flow", function(){
 
     var wrappedStubs = {},
+        resolved = $.Deferred().resolve(),
+        rejected = $.Deferred().reject(),
         target;
 
     beforeEach(function() {
@@ -75,10 +77,50 @@ describe("flow", function(){
 
                     var self = this;
                     var found = _.find(target.steps, function(step) {
-                        return step.callback = self.stepCallback;
+                        return step.callback === self.stepCallback;
                     });
 
                     found.name.should.equal("step." + (target.steps.length));
+
+                });
+            });
+
+            describe("when the argument is another flow", function(){
+
+                beforeEach(function() {
+                    this.flowStep = flow("someOtherFlow");
+                    sinon.stub(this.flowStep, "begin");
+                    target.step(this.flowStep);
+                });
+
+                afterEach(function() {
+                    this.flowStep.destroy();
+                });
+
+
+                it("should create a new object in the steps array with a name in the format of " +
+                    "'step.{length}.{flow.name}'", function() {
+
+                    var self = this;
+                    var found = _.find(target.steps, function(step, index) {
+                        return step.name === "step." + (index+1) + "." + self.flowStep.name;
+                    });
+
+                    should.exist(found);
+
+                });
+
+                it("should create a new object in the steps array with a " +
+                    "callback that calls the flow's begin method", function(){
+
+                    var self = this;
+                    var found = _.find(target.steps, function(step, index) {
+                        return step.name === "step." + (index+1) + "." + self.flowStep.name;
+                    });
+
+                    found.callback();
+
+                    this.flowStep.begin.called.should.be.true;
 
                 });
             });
@@ -87,12 +129,12 @@ describe("flow", function(){
 
         describe("when two arguments passed", function(){
 
-            beforeEach(function() {
-                this.callbackStub = sinon.stub();
-                this.result = target.step("one", this.callbackStub);
-            });
-
             describe("when the second argument is a function", function(){
+
+                beforeEach(function() {
+                    this.callbackStub = sinon.stub();
+                    this.result = target.step("one", this.callbackStub);
+                });
 
                 beforeEach(function() {
                     this.found = _.find(target.steps, function(step) {
@@ -112,6 +154,80 @@ describe("flow", function(){
 
                     this.callbackStub.called.should.be.true;
 
+                });
+            });
+
+            describe("when second argument is a string", function(){
+
+                beforeEach(function() {
+                    this.flowStep = flow("someOtherFlow");
+                    sinon.stub(this.flowStep, "begin");
+
+                    this.result = target.step("one", "someOtherFlow");
+                });
+
+                beforeEach(function() {
+                    this.found = _.find(target.steps, function(step) {
+                        return step.name === "one";
+                    });
+                });
+
+                afterEach(function() {
+                    this.flowStep.destroy();
+                });
+
+                it("should create a new object in the steps array with the name", function() {
+
+                    this.found.name.should.equal("one");
+
+                });
+
+                it("should create a new object in the steps array with a " +
+                    "callback that calls the begin method on the flow with name matching the second argument", function() {
+
+                    this.found.callback();
+
+                    this.flowStep.begin.called.should.be.true;
+
+                });
+
+
+
+            });
+            
+            describe("when the second argument is a flow", function(){
+
+                beforeEach(function() {
+                    this.flowStep = flow("someOtherFlow");
+                    sinon.stub(this.flowStep, "begin");
+
+                    this.result = target.step("one", this.flowStep);
+                });
+
+                beforeEach(function() {
+                    this.found = _.find(target.steps, function(step) {
+                        return step.name === "one";
+                    });
+                });
+
+                afterEach(function() {
+                    this.flowStep.destroy();
+                });
+
+                it("should create a new object in the steps array with a name", function() {
+
+                    this.found.name.should.equal("one");
+
+                });
+
+
+                it("should create a new object in the steps array with a " +
+                    "callback that calls the flow's begin method", function() {
+
+                    this.found.callback();
+
+                    this.flowStep.begin.called.should.be.true;
+                
                 });
             });
 
@@ -164,6 +280,62 @@ describe("flow", function(){
                 })
 
             });
+        });
+
+        describe("when there are steps in the flow", function(){
+
+            beforeEach(function() {
+                target
+                    .step("one", sinon.stub())
+                    .step("two", sinon.stub());
+            });
+
+            describe("when arguments are passed", function(){
+
+                beforeEach(function() {
+                    this.arg1 = "firstArg";
+                    this.arg2 = "secondArg";
+                });
+
+
+
+                describe("when flow execution mode is waterfall", function(){
+
+                    beforeEach(function() {
+                        target.begin(this.arg1, this.arg2);
+                    });
+
+                    it("should pass the arguments to the waterfall mode handler", function() {
+
+                        var args = wrappedStubs.waterfallMode.firstCall.args[2];
+
+                        args[0].should.equal(this.arg1);
+                        args[1].should.equal(this.arg2);
+
+                    });
+
+                });
+
+                describe("when flow execution mode is parallel", function(){
+
+                    beforeEach(function() {
+                        target.parallel().begin(this.arg1, this.arg2);
+                    });
+
+                    it("should pass the arguments to the parallel mode handler", function() {
+
+                        var args = wrappedStubs.parallelMode.firstCall.args[2];
+
+                        args[0].should.equal(this.arg1);
+                        args[1].should.equal(this.arg2);
+
+                    });
+
+
+                });
+
+            });
+
         });
 
         describe("when there is only one step in the flow", function(){
@@ -393,8 +565,8 @@ describe("flow", function(){
         it("should return the flow", function(){
 
             this.result.should.equal(this.result);
-
         });
+
     });
 
     describe("parallel", function(){
@@ -482,25 +654,56 @@ describe("flow", function(){
 
     describe("modes", function(){
 
+        beforeEach(function() {
+
+            this.stubbedSteps = {
+                one : sinon.stub(),
+                two : sinon.stub()
+            };
+
+            this.stepsToExecute = [
+                {
+                    name : "one",
+                    callback : this.stubbedSteps.one
+                },
+                {
+                    name : "two",
+                    callback : this.stubbedSteps.two
+                }];
+
+        });
+
         describe("waterfall", function(){
 
-            beforeEach(function() {
+            describe("when third argument is not empty", function(){
 
-                this.stubbedSteps = {
-                    one : sinon.stub(),
-                    two : sinon.stub()
-                };
+                beforeEach(function() {
+                    this.arg1 = "firstArg";
+                    this.arg2 = "secondArg";
 
-                this.stepsToExecute = [
-                    {
-                        name : "one",
-                        callback : this.stubbedSteps.one
-                    },
-                    {
-                        name : "two",
-                        callback : this.stubbedSteps.two
-                    }];
+                    _.each(this.stubbedSteps, function(stub) {
+                        stub.returns($.Deferred().resolve());
+                    });
 
+                    target.modes.waterfall(null, this.stepsToExecute, [this.arg1, this.arg2]);
+                });
+
+                it("should pass third arguments to first step", function() {
+
+                    var passedArgs = this.stubbedSteps.one.firstCall.args;
+
+                    passedArgs[0].should.equal(this.arg1);
+                    passedArgs[1].should.equal(this.arg2);
+
+                });
+
+                it("should NOT pass third arguments to second step", function(){
+
+                    var passedArgs = this.stubbedSteps.two.firstCall.args;
+
+                    passedArgs.length.should.equal(0);
+
+                });
             });
 
             describe("when all steps resolve", function(){
@@ -612,6 +815,83 @@ describe("flow", function(){
             });
         });
 
+
+        describe("parallel", function(){
+
+            describe("when all steps resolve", function(){
+
+                beforeEach(function() {
+                    _.each(this.stubbedSteps, function(stub) {
+                        stub.returns($.Deferred().resolve());
+                    });
+
+                    target.modes.parallel(null, this.stepsToExecute);
+
+                });
+
+                it("should call all steps", function() {
+
+                    _.each(this.stubbedSteps, function(stub) {
+                        stub.called.should.be.true;
+                    });
+
+                });
+            });
+
+            describe("when all steps reject", function(){
+
+                beforeEach(function() {
+                    _.each(this.stubbedSteps, function(stub) {
+                        stub.returns($.Deferred().reject());
+                    });
+
+                    target.modes.parallel(null, this.stepsToExecute);
+
+                });
+
+
+                it("should call all steps", function() {
+
+                    _.each(this.stubbedSteps, function(stub) {
+                        stub.called.should.be.true;
+                    });
+
+                });
+            });
+
+
+            describe("when third argument is not empty", function(){
+
+                beforeEach(function() {
+                    this.arg1 = "firstArg";
+                    this.arg2 = "secondArg";
+
+                    _.each(this.stubbedSteps, function(stub) {
+                        stub.returns($.Deferred().resolve());
+                    });
+
+                    target.modes.parallel(null, this.stepsToExecute, [this.arg1, this.arg2]);
+                });
+
+                it("should pass third arguments to first step", function() {
+
+                    var passedArgs = this.stubbedSteps.one.firstCall.args;
+
+                    passedArgs[0].should.equal(this.arg1);
+                    passedArgs[1].should.equal(this.arg2);
+
+                });
+
+                it("should pass third arguments to second step", function(){
+
+                    var passedArgs = this.stubbedSteps.two.firstCall.args;
+
+                    passedArgs[0].should.equal(this.arg1);
+                    passedArgs[1].should.equal(this.arg2);
+
+                });
+            });
+        });
     });
 
 });

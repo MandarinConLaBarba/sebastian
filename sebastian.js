@@ -21,11 +21,31 @@
     var flows = {},
         defaultMode = "waterfall";
 
+    var internals = {
+        /**
+         * Private method for executing a step
+         *
+         * Meant to be called with .call(step), where step was created via public API .step(name, callback);
+         *
+         * @param ctx
+         * @param args
+         * @return deferred
+         */
+        step : function(ctx, args) {
+            return this.callback.apply(ctx, args);
+        }
+    };
+
     //flow factory/getter
     Flow = function(name) {
 
         if (!flows[name]) {
             flows[name] = Object.create({
+
+                /**
+                 * Simple flag to use when determining if step should be executed as a flow or callback
+                 */
+                flow : true,
 
                 /**
                  * The 'this' context for the flow steps
@@ -154,7 +174,7 @@
                         //If there's a conditional failure callback, set it to common variable
                         if (conditionalCallback) {
                             failureCallback = conditionalCallback;
-                            //Else, set it to the default (declared on flow class)
+                            //Else, set it to the default (declared on flow w/ onFailure())
                         } else if (self.fail) {
                             failureCallback = self.defaultFailCallback;
                             //Else return
@@ -220,7 +240,7 @@
                     if (this.defaultSuccessDelegate) {
                         promise.then(function() {
                             var flow = Flow(self.defaultSuccessDelegate);
-                            flow.begin(self.ctx);
+                            flow.context(self.ctx).begin();
                         });
                     }
                 },
@@ -232,29 +252,48 @@
                  *
                  * For example, step.1, step.2, step.3, etc
                  *
-                 * @param name the name of the step or a step callback (when no name is specified)
-                 * @param callback the step callback/flow. If this is falsey and first arg is a string the function acts as a getter, otherwise it's a setter
+                 * @param arg1 the name of the step or a step callback (when no name is specified)
+                 * @param arg2 the step callback/flow. If this is falsey and first arg is a string the function acts as a getter, otherwise it's a setter
                  * @return {*}
                  */
-                step : function(name, callback) {
+                step : function(arg1, arg2) {
 
-                    if (callback) {
+                    var self = this,
+                        wrapFlowCallback = function(flow) {
+                            return function() {
+                                flow.context(this).begin([].slice.call(arguments));
+                            };
+                        };
+
+                    //Check if second arg is present, if so add/create step object with explicit name
+                    if (arg2) {
+                        if (typeof arg2 === "string") {
+                            arg2 = Flow(arg2);
+                        }
                         this.steps.push({
-                            name : name,
-                            callback : callback
+                            name : arg1,
+                            callback : arg2.flow ? wrapFlowCallback(arg2) : arg2 //if callback is a flow, create a flow wrapper callback
                         });
                         return this;
-                    } else if (typeof name === "function" || typeof name === "object"){
+                    } else if (typeof arg1 === "function"){
+                        //If first arg is a function, make up a name for them
                         this.steps.push({
                             name : "step." + (this.steps.length + 1),
-                            callback : name
+                            callback : arg1
                         });
+                        return this;
+                    } else if (typeof arg1 === "object" && arg1.flow) {
+                        //If first arg is an object, make up a name for them and create a flow wrapper callback
+                        this.steps.push({
+                            name : "step." + (this.steps.length + 1) + "." + arg1.name,
+                            callback : wrapFlowCallback(arg1)
+                        });
+                        return this;
                     } else {
-                        var foundStep,
-                            self = this;
+                        var foundStep;
                         for (var i = 0; i < this.steps.length; i++)
                         {
-                            if (self.steps[i].name === name) {
+                            if (self.steps[i].name === arg1) {
                                 foundStep = self.steps[i];
                                 break;
                             }
@@ -286,14 +325,14 @@
                              * passed returns one.
                              */
                             if (!promise.then) {
-                                promise = $.when(promise.callback.apply(ctx, args));
+                                promise = $.when(internals.step.call(promise, ctx, args));
                             }
 
                             /**
                              * Attach the step as success callback to the promise
                              */
                             return $.when(promise).then(function() {
-                                return step.callback.apply(ctx, [].slice.call(arguments));
+                                return internals.step.call(step, ctx, [].slice.call(arguments));
                             });
                         });
 
@@ -310,7 +349,7 @@
                     parallel : function(ctx, stepsToExecute, args) {
                         var promises = [];
                         for (var index in stepsToExecute) {
-                            promises.push(stepsToExecute[index].callback.apply(ctx, args));
+                            promises.push(internals.step.call(stepsToExecute[index], ctx, args));
                         }
 
                         return $.when.apply(null, promises);
@@ -339,6 +378,16 @@
 
                 /**
                  * Begin the flow
+                 *
+                 * All arguments are passed on to either first step (waterfall) or all steps (parallel)
+                 *
+                 * Example usage:
+                 *
+                 * flow.begin();
+                 *
+                 * Or
+                 *
+                 * flow.begin(arg1, arg2, arg3, ..);
                  *
                  */
                 begin : function() {
@@ -373,9 +422,9 @@
                     }
 
                     var promise,
-                        args = [].slice.call(arguments).slice(1);
+                        args = [].slice.call(arguments);
                     if (stepsToExecute.length === 1) {
-                        promise = $.when(stepsToExecute[0].callback.apply(self.ctx, args));
+                        promise = $.when(internals.step.call(stepsToExecute[0], self.ctx, args));
                     } else {
                         promise = this.modes[this.mode](self.ctx, stepsToExecute, args);
                     }

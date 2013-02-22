@@ -1,6 +1,11 @@
 var $ = require("jquery-deferred"),
     flow = require("../../sebastian").flow;
 
+/**
+ * Demonstrates how you can direct flow when a specific error result is encountered
+ *
+ */
+
 flow("firstFlow")
     .step("one", function() {
         console.log("executing step one in firstFlow...");
