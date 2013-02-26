@@ -294,14 +294,18 @@ describe("flow", function(){
                 beforeEach(function() {
                     this.arg1 = "firstArg";
                     this.arg2 = "secondArg";
+
+
                 });
-
-
 
                 describe("when flow execution mode is waterfall", function(){
 
                     beforeEach(function() {
+
+                        wrappedStubs.waterfallMode.returns(rejected);
+
                         target.begin(this.arg1, this.arg2);
+
                     });
 
                     it("should pass the arguments to the waterfall mode handler", function() {
@@ -318,6 +322,9 @@ describe("flow", function(){
                 describe("when flow execution mode is parallel", function(){
 
                     beforeEach(function() {
+
+                        wrappedStubs.parallelMode.returns(rejected);
+
                         target.parallel().begin(this.arg1, this.arg2);
                     });
 
@@ -380,6 +387,9 @@ describe("flow", function(){
 
         describe("when there are two or more steps in the flow", function(){
             beforeEach(function() {
+
+                wrappedStubs.waterfallMode.returns(rejected);
+
                 target
                     .step("one", sinon.stub())
                     .step("two", sinon.stub());
@@ -426,6 +436,9 @@ describe("flow", function(){
             describe("and the execution mode is parallel", function(){
 
                 beforeEach(function() {
+
+                    wrappedStubs.parallelMode.returns(rejected);
+
                     target.parallel().begin();
                 });
 
@@ -900,19 +913,24 @@ describe("flow", function(){
 
             beforeEach(function() {
                 this.context = {
-                    promise : {
-                        fail : sinon.stub()
+                    masterPromise : {
+                        then : sinon.stub(),
+                        resolve : sinon.stub()
                     },
                     conditionalFailDelegates: []
+                };
+
+                this.promise = {
+                    fail : sinon.stub()
                 };
 
             });
 
             it("should call the fail method on the promise argument", function() {
 
-                target.attachFailDelegate.call(this.context);
+                target.attachFailDelegate.call(this.context, this.promise);
 
-                this.context.promise.fail.called.should.be.true;
+                this.promise.fail.called.should.be.true;
 
 
             });
@@ -930,12 +948,14 @@ describe("flow", function(){
                             sinon.stub(this.delegateFlow, "context");
                             sinon.stub(this.delegateFlow, "begin");
 
-                            this.delegateFlowPromise = sinon.stub();
+                            this.delegateFlowPromise = {
+                                then : sinon.stub()
+                            };
 
                             this.delegateFlow.context.returns(this.delegateFlow);
                             this.delegateFlow.begin.returns(this.delegateFlowPromise);
 
-                            this.context.promise.fail.callsArg(0);
+                            this.promise.fail.callsArg(0);
 
                         });
 
@@ -950,7 +970,7 @@ describe("flow", function(){
 
                                 this.context.defaultFailDelegate = this.delegateFlow;
 
-                                target.attachFailDelegate.call(this.context);
+                                target.attachFailDelegate.call(this.context, this.promise);
                             });
 
 
@@ -961,12 +981,16 @@ describe("flow", function(){
 
                             });
 
-                            it("should set the context promise to the result of " +
-                                "the delegate flow begin method", function(){
+                            it("should resolve the masterPromise when the delegate flow is resolved", function(){
 
-                                this.context.promise.should.equal(this.delegateFlowPromise);
+                                this.delegateFlowPromise.then.callsArg(0);
+
+                                target.attachFailDelegate.call(this.context, this.promise);
+
+                                this.context.masterPromise.resolve.called.should.be.true;
 
                             });
+
                         });
 
                         describe("when defaultFailDelegate is a string", function(){
@@ -975,7 +999,7 @@ describe("flow", function(){
 
                                 this.context.defaultFailDelegate = this.delegateFlow.name;
 
-                                target.attachFailDelegate.call(this.context);
+                                target.attachFailDelegate.call(this.context, this.promise);
                             });
 
                             it("should call the begin method on the flow with name " +

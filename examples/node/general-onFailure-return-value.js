@@ -11,8 +11,12 @@ flow("firstFlow")
         console.log("executing step one in firstFlow...");
     })
     .step("two", function() {
-        console.log("executing step two in firstFlow...");
-        return $.Deferred().resolve("the composite flow should be resolved, even though the second flow failed");
+        var deferred = $.Deferred();
+
+        deferred.resolve("the composite flow should be resolved, even though the second flow failed");
+
+        return deferred;
+
     });
 
 flow("secondFlow")
@@ -27,6 +31,10 @@ flow("secondFlow")
 
 console.log("beginning flow two, chained to one on failure 'blah'");
 var promise = flow("secondFlow").onFailure("blah").jumpTo("firstFlow").begin();
+
+promise.fail(function() {
+    console.log("it failed..");
+});
 
 promise.then(function(result) {
     console.log(result);

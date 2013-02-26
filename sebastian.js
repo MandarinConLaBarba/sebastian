@@ -159,12 +159,12 @@
                  *
                  * @param promise
                  */
-                attachFailCallback : function() {
+                attachFailCallback : function(promise) {
 
                     var self = this;
 
                     //Attach wrapper failure callback
-                    self.promise.fail(function(response) {
+                    promise.fail(function(response) {
                         var code = response && response.responseCode ?
                             response.responseCode : response;
 
@@ -198,12 +198,12 @@
                  *
                  * @param promise
                  */
-                attachFailDelegate : function() {
+                attachFailDelegate : function(promise) {
 
                     var self = this;
 
                     if (this.conditionalFailDelegates) {
-                        self.promise.fail(function(response) {
+                        promise.fail(function(response) {
                             var code = response && response.responseCode ?
                                 response.responseCode : response;
 
@@ -218,14 +218,15 @@
                                 failureDelegate = self.defaultFailDelegate;
                                 //Else return
                             } else {
+                                self.masterPromise.reject();
                                 return;
                             }
 
                             var flow = failureDelegate;
                             flow = flow.flow ? flow : Flow(failureDelegate);
-                            self.promise = flow.context(self.ctx)
-                                .begin();
-
+                            flow.context(self.ctx)
+                                .begin()
+                                .then(self.masterPromise.resolve);
 
                         });
                     }
@@ -237,12 +238,15 @@
                  *
                  * @param promise
                  */
-                attachSuccessDelegate : function() {
+                attachSuccessDelegate : function(promise) {
                     var self = this;
                     if (this.defaultSuccessDelegate) {
-                        self.promise.then(function() {
+                        promise.then(function() {
                             var flow = Flow(self.defaultSuccessDelegate);
-                            self.promise = flow.context(self.ctx).begin();
+                            flow.context(self.ctx)
+                                .begin()
+                                .then(self.masterPromise.resolve);
+
                         });
                     }
                 },
@@ -423,22 +427,27 @@
                         return $.Deferred().reject("There are no steps to execute in current execution plan.");
                     }
 
-                    var args = [].slice.call(arguments);
+                    this.masterPromise = $.Deferred();
+
+                    var promise,
+                        args = [].slice.call(arguments);
                     if (stepsToExecute.length === 1) {
-                        this.promise = $.when(internals.step.call(stepsToExecute[0], self.ctx, args));
+                        promise = $.when(internals.step.call(stepsToExecute[0], self.ctx, args));
                     } else {
-                        this.promise = this.modes[this.mode](self.ctx, stepsToExecute, args);
+                        promise = this.modes[this.mode](self.ctx, stepsToExecute, args);
                     }
 
                     //attach failure callback wrapper...this will get the failure result and decide whether to invoke conditional
                     //callbacks or the general failure callback
-                    this.attachFailCallback();
+                    this.attachFailCallback(promise);
 
                     //jump to any flows specified by 'jumpTo'
-                    this.attachFailDelegate();
-                    this.attachSuccessDelegate();
+                    this.attachFailDelegate(promise);
+                    this.attachSuccessDelegate(promise);
 
-                    return this.promise;
+                    promise.then(this.masterPromise.resolve);
+
+                    return this.masterPromise;
 
                 },
 
