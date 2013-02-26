@@ -899,17 +899,20 @@ describe("flow", function(){
         describe("when conditionalFailDelegates is truthy", function(){
 
             beforeEach(function() {
-                this.promiseArg = {
-                    fail : sinon.stub()
+                this.context = {
+                    promise : {
+                        fail : sinon.stub()
+                    },
+                    conditionalFailDelegates: []
                 };
 
             });
 
             it("should call the fail method on the promise argument", function() {
 
-                target.attachFailDelegate(this.promiseArg);
+                target.attachFailDelegate.call(this.context);
 
-                this.promiseArg.fail.called.should.be.true;
+                this.context.promise.fail.called.should.be.true;
 
 
             });
@@ -927,9 +930,12 @@ describe("flow", function(){
                             sinon.stub(this.delegateFlow, "context");
                             sinon.stub(this.delegateFlow, "begin");
 
-                            this.delegateFlow.context.returns(this.delegateFlow);
+                            this.delegateFlowPromise = sinon.stub();
 
-                            this.promiseArg.fail.callsArg(0);
+                            this.delegateFlow.context.returns(this.delegateFlow);
+                            this.delegateFlow.begin.returns(this.delegateFlowPromise);
+
+                            this.context.promise.fail.callsArg(0);
 
                         });
 
@@ -942,9 +948,9 @@ describe("flow", function(){
 
                             beforeEach(function() {
 
-                                target.onFailure().jumpTo(this.delegateFlow);
+                                this.context.defaultFailDelegate = this.delegateFlow;
 
-                                target.attachFailDelegate(this.promiseArg);
+                                target.attachFailDelegate.call(this.context);
                             });
 
 
@@ -954,15 +960,22 @@ describe("flow", function(){
                                 this.delegateFlow.begin.called.should.be.true;
 
                             });
+
+                            it("should set the context promise to the result of " +
+                                "the delegate flow begin method", function(){
+
+                                this.context.promise.should.equal(this.delegateFlowPromise);
+
+                            });
                         });
 
                         describe("when defaultFailDelegate is a string", function(){
 
                             beforeEach(function() {
 
-                                target.onFailure().jumpTo(this.delegateFlow.name);
+                                this.context.defaultFailDelegate = this.delegateFlow.name;
 
-                                target.attachFailDelegate(this.promiseArg);
+                                target.attachFailDelegate.call(this.context);
                             });
 
                             it("should call the begin method on the flow with name " +

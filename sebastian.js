@@ -159,12 +159,12 @@
                  *
                  * @param promise
                  */
-                attachFailCallback : function(promise) {
+                attachFailCallback : function() {
 
                     var self = this;
 
                     //Attach wrapper failure callback
-                    promise.fail(function(response) {
+                    self.promise.fail(function(response) {
                         var code = response && response.responseCode ?
                             response.responseCode : response;
 
@@ -198,12 +198,12 @@
                  *
                  * @param promise
                  */
-                attachFailDelegate : function(promise) {
+                attachFailDelegate : function() {
 
                     var self = this;
 
                     if (this.conditionalFailDelegates) {
-                        promise.fail(function(response) {
+                        self.promise.fail(function(response) {
                             var code = response && response.responseCode ?
                                 response.responseCode : response;
 
@@ -223,7 +223,7 @@
 
                             var flow = failureDelegate;
                             flow = flow.flow ? flow : Flow(failureDelegate);
-                            flow.context(self.ctx)
+                            self.promise = flow.context(self.ctx)
                                 .begin();
 
 
@@ -237,12 +237,12 @@
                  *
                  * @param promise
                  */
-                attachSuccessDelegate : function(promise) {
+                attachSuccessDelegate : function() {
                     var self = this;
                     if (this.defaultSuccessDelegate) {
-                        promise.then(function() {
+                        self.promise.then(function() {
                             var flow = Flow(self.defaultSuccessDelegate);
-                            flow.context(self.ctx).begin();
+                            self.promise = flow.context(self.ctx).begin();
                         });
                     }
                 },
@@ -423,23 +423,22 @@
                         return $.Deferred().reject("There are no steps to execute in current execution plan.");
                     }
 
-                    var promise,
-                        args = [].slice.call(arguments);
+                    var args = [].slice.call(arguments);
                     if (stepsToExecute.length === 1) {
-                        promise = $.when(internals.step.call(stepsToExecute[0], self.ctx, args));
+                        this.promise = $.when(internals.step.call(stepsToExecute[0], self.ctx, args));
                     } else {
-                        promise = this.modes[this.mode](self.ctx, stepsToExecute, args);
+                        this.promise = this.modes[this.mode](self.ctx, stepsToExecute, args);
                     }
 
                     //attach failure callback wrapper...this will get the failure result and decide whether to invoke conditional
                     //callbacks or the general failure callback
-                    this.attachFailCallback(promise);
+                    this.attachFailCallback();
 
                     //jump to any flows specified by 'jumpTo'
-                    this.attachFailDelegate(promise);
-                    this.attachSuccessDelegate(promise);
+                    this.attachFailDelegate();
+                    this.attachSuccessDelegate();
 
-                    return promise;
+                    return this.promise;
 
                 },
 
