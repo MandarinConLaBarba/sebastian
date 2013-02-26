@@ -202,34 +202,33 @@
 
                     var self = this;
 
-                    if (this.conditionalFailDelegates) {
-                        promise.fail(function(response) {
-                            var code = response && response.responseCode ?
-                                response.responseCode : response;
+                    promise.fail(function(response) {
+                        var code = response && response.responseCode ?
+                            response.responseCode : response;
 
-                            var failureDelegate,
-                                conditionalDelegate = self.conditionalFailDelegates[code];
+                        var failureDelegate,
+                            conditionalDelegate = self.conditionalFailDelegates[code];
 
-                            //If there's a conditional failure callback, set it to common variable
-                            if (conditionalDelegate) {
-                                failureDelegate = conditionalDelegate;
-                                //Else, set it to the default (declared on flow class)
-                            } else if (self.defaultFailDelegate) {
-                                failureDelegate = self.defaultFailDelegate;
-                                //Else return
-                            } else {
-                                self.masterPromise.reject();
-                                return;
-                            }
+                        //If there's a conditional failure callback, set it to common variable
+                        if (conditionalDelegate) {
+                            failureDelegate = conditionalDelegate;
+                        } else if (self.defaultFailDelegate) {
+                            //Else if there's a defaultFailDelegate, set it to the default (declared on flow class)
+                            failureDelegate = self.defaultFailDelegate;
+                        } else {
+                            /**
+                             * Else if we found no delegate, go ahead and reject the main promise for the flow
+                             */
+                            return self.masterPromise.reject(response);
+                        }
 
-                            var flow = failureDelegate;
-                            flow = flow.flow ? flow : Flow(failureDelegate);
-                            flow.context(self.ctx)
-                                .begin()
-                                .then(self.masterPromise.resolve);
+                        var flow = failureDelegate;
+                        flow = flow.flow ? flow : Flow(failureDelegate);
+                        flow.context(self.ctx)
+                            .begin()
+                            .then(self.masterPromise.resolve);
 
-                        });
-                    }
+                    });
 
                 },
 

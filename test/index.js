@@ -915,6 +915,7 @@ describe("flow", function(){
                 this.context = {
                     masterPromise : {
                         then : sinon.stub(),
+                        reject : sinon.stub(),
                         resolve : sinon.stub()
                     },
                     conditionalFailDelegates: []
@@ -1011,6 +1012,30 @@ describe("flow", function(){
                             });
                         });
 
+                    });
+
+                    describe("when there is NOT a defaultFailDelegate", function(){
+
+                        beforeEach(function() {
+
+                            this.failValue = "someFailureCode";
+                            this.promise.fail.callsArgWith(0, this.failValue);
+
+                            target.attachFailDelegate.call(this.context, this.promise);
+                        });
+
+                        it("should reject the master promise", function() {
+
+                            this.context.masterPromise.reject.called.should.be.true;
+
+                        });
+
+                        it("should reject the master promise with the promise failure result", function(){
+
+                            this.context.masterPromise.reject.firstCall.args[0]
+                                .should.equal(this.failValue);
+
+                        });
                     });
 
                 });
