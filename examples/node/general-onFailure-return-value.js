@@ -12,7 +12,7 @@ flow("firstFlow")
     })
     .step("two", function() {
         console.log("executing step two in firstFlow...");
-        return $.Deferred().resolve("the composite flow should be resolved");
+        return $.Deferred().resolve("the composite flow should be resolved, even though the second flow failed");
     });
 
 flow("secondFlow")
