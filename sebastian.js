@@ -266,7 +266,7 @@
                     var self = this,
                         wrapFlowCallback = function(flow) {
                             return function() {
-                                flow.context(this).begin([].slice.call(arguments));
+                                return flow.context(this).begin([].slice.call(arguments));
                             };
                         };
 

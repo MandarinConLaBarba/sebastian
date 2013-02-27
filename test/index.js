@@ -110,18 +110,36 @@ describe("flow", function(){
 
                 });
 
-                it("should create a new object in the steps array with a " +
-                    "callback that calls the flow's begin method", function(){
 
-                    var self = this;
-                    var found = _.find(target.steps, function(step, index) {
-                        return step.name === "step." + (index+1) + "." + self.flowStep.name;
+                describe("the step callback", function(){
+
+                    beforeEach(function() {
+                        this.flowStep.begin.returns("somePromise");
+
+                        var self = this;
+                        var foundStep = _.find(target.steps, function(step, index) {
+                            return step.name === "step." + (index+1) + "." + self.flowStep.name;
+                        });
+
+                        this.result = foundStep.callback();
+
                     });
 
-                    found.callback();
+                    it("should call the flow's begin method", function(){
 
-                    this.flowStep.begin.called.should.be.true;
 
+
+                        this.flowStep.begin.called.should.be.true;
+
+                    });
+
+
+                    it("should return the result of the flow's begin method", function(){
+
+                        this.result.should.equal("somePromise");
+                    
+                    });    
+                        
                 });
             });
 
