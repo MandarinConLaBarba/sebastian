@@ -524,6 +524,9 @@
      *
      */
 
+    // Establish the object that gets returned to break out of a loop iteration.
+    var breaker = {};
+
     var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
 
     var nativeForEach      = ArrayProto.forEach,
