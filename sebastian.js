@@ -540,6 +540,10 @@
         this._wrapped = obj;
     };
 
+    _.has = function(obj, key) {
+        return ObjProto.hasOwnProperty.call(obj, key);
+    };
+
     // The cornerstone, an `each` implementation, aka `forEach`.
     // Handles objects with the built-in `forEach`, arrays, and raw objects.
     // Delegates to **ECMAScript 5**'s native `forEach` if available.
