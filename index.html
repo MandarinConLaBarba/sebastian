@@ -31,6 +31,137 @@
 
             <script src="https://gist.github.com/MandarinConLaBarba/5056009.js"></script>
 
+            <h3>Anatomy of a step</h3>
+
+            <p>A step is comprised of:
+
+                <ul>
+                    <li>a name</li>
+                    <li>a callback function or another flow</li>
+                </ul>
+            </p>
+
+            <h4>Keep it simple</h4>
+
+            <p>
+                A step should ideally do one or two things - it should not be complicated. Try to keep it short and sweet.
+                This is especially useful if you write tests first.
+            </p>
+
+            <h4>Return Deferreds for Asynchronous Operations</h4>
+
+            <p>
+                If the step involves an asynchronous call, you can return a jQuery Deferred or Promise to make sure the
+                next step in the flow doesn't execute. If you don't return a Deferred, execution of next step will begin
+                immediately.
+            </p>
+
+            <h4>Argument Chains</h4>
+
+            <p>Values returned from upstream step are passed as arguments to downstream step. If step "one" returns
+                "blah", the first argument to step two will be "blah".
+            </p>
+
+            <h3>Anatomy of a flow</h3>
+
+            <p>A flow is comprised of:
+
+                <ul>
+                    <li>One or more steps</li>
+                    <li>Zero or more failure callbacks</li>
+                    <li>Zero or more failure delegates</li>
+                    <li>An optional success delegate</li>
+                    <li>An optional context</li>
+                </ul>
+            </p>
+
+            <h3>Flow API</h3>
+
+            <h4>Add a new step</h4>
+
+            <ul>
+                <li>
+                    <code>flow.step(stepName, stepCallback);</code>
+                </li>
+            </ul>
+
+            <h5>Overloads:</h5>
+
+            <ul>
+                <li>
+                    <code>flow.step(stepCallback);</code>
+                </li>
+                <li>
+                    <code>flow.step(stepName, anotherFlow);</code>
+                </li>
+                <li>
+                    <code>flow.step(anotherFlow);</code>
+                </li>
+            </ul>
+
+            <h4>Get a previously defined step</h4>
+
+            <ul>
+                <li>
+                    <code>flow.step(stepName);</code>
+                </li>
+            </ul>
+
+            <h4>Handle failure with a callback</h4>
+
+            <p>NOTE: Only executed if the flow fails, and no other specific failure callbacks are suitable</p>
+
+            <ul>
+                <li>
+                    <code>flow.onFailure().handleWith(callback)</code>
+                </li>
+            </ul>
+
+            <h4>Handle specific failure response with a callback</h4>
+
+            <p>NOTE: Only executed if the flow fails with a particular return value.</p>
+
+            <ul>
+                <li>
+                    <code>flow.onFailure("someAnticipatedReturnValue").handleWith(callback);</code>
+                </li>
+            </ul>
+
+            <h4>Handle failure with another flow</h4>
+
+            <p>Delegates to another flow in the event of a failure. Only executed if no specific failure flows are suitable</p>
+
+            <ul>
+                <li>
+                    <code>flow.onFailure().jumpTo(anotherFlow);</code>
+                </li>
+            </ul>
+
+            <h5>Overloads</h5>
+
+            <ul>
+                <li>
+                    <code>flow.onFailure().jumpTo(anotherFlowName);</code>
+                </li>
+            </ul>
+
+            <h4>Handle specific failure with another flow</h4>
+
+            <ul>
+                <li>
+                    <code>flow.onFailure("someAnticipatedReturnValue").jumpTo(anotherFlow);</code>
+                </li>
+            </ul>
+
+            <h5>Overloads</h5>
+
+            <ul>
+                <li>
+                    <code>flow.onFailure("someAnticipatedReturnValue").jumpTo(anotherFlowName);</code>
+                </li>
+            </ul>
+
+
         </div>
 
     </div>
