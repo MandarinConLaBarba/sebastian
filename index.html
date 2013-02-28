@@ -31,6 +31,12 @@
 
             <script src="https://gist.github.com/MandarinConLaBarba/5056009.js"></script>
 
+            <h3>Examples</h3>
+
+            <p>
+                Check out the examples <a href="https://github.com/MandarinConLaBarba/sebastian/tree/master/examples/node">here.</a>
+            </p>
+
             <h3>Anatomy of a step</h3>
 
             <p>A step is comprised of:
@@ -161,6 +167,77 @@
                 </li>
             </ul>
 
+            <h4>Handle failure by starting the flow over (loop)</h4>
+
+            <ul>
+                <li>
+                    <code>flow.onFailure().loop();</code>
+                </li>
+            </ul>
+
+            <h4>Handle specific failure by starting the flow over (loop)</h4>
+
+            <ul>
+                <li>
+                    <code>flow.onFailure("someAnticipatedReturnValue").loop();</code>
+                </li>
+            </ul>
+
+            <h4>Skip a step in a flow</h4>
+
+            <p>When the flow is executed, skip a specific step.</p>
+
+            <ul>
+                <li>
+                    <code>flow.skip(stepName);</code>
+                </li>
+            </ul>
+
+            <h4>Provide context object for a flow</h4>
+
+            <p>When used, 'this' within steps will be the context object</p>
+
+            <ul>
+                <li>
+                    <code>flow.context(object);</code>
+                </li>
+            </ul>
+
+            <h4>Set the flow execute mode to run all steps in parallel</h4>
+
+            <p>NOTE: when in flow executes in parallel mode, arguments passed to flow.begin() are sent to all steps.</p>
+
+            <ul>
+                <li>
+                    <code>flow.parallel();</code>
+                </li>
+            </ul>
+
+            <h4>Set the flow execute mode to run all steps in sequence (default mode)</h4>
+
+            <p>NOTE: when in flow executes in waterfall mode, arguments passed to flow.begin() are sent to the first step.</p>
+
+            <ul>
+                <li>
+                    <code>flow.waterfall();</code>
+                </li>
+            </ul>
+
+            <h4>Begin flow execution</h4>
+
+            <ul>
+                <li>
+                    <code>flow.begin();</code>
+                </li>
+            </ul>
+
+            <h5>Overloads</h5>
+
+            <ul>
+                <li>
+                    <code>flow.begin(arg1, arg2, ..);</code>
+                </li>
+            </ul>
 
         </div>
 
