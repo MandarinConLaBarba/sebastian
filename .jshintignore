@@ -1,4 +1,4 @@
 app.js
 test/index.js
 node_modules/
-examples/vendor/
+vendor/
