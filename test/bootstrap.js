@@ -4,8 +4,7 @@ require.config({
         "jquery" : "vendor/jquery/jquery",
         "chai" : "vendor/chai/chai",
         "underscore" : "vendor/underscore-amd/underscore",
-        "sinon" : "vendor/sinon/sinon",
-        "sebastian" : "sebastian"
+        "sinon" : "vendor/sinon/sinon"
     },
     "shim" : {
         "chai" : {
