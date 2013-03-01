@@ -323,23 +323,23 @@
                      */
                     waterfall : function(ctx, stepsToExecute, args) {
 
-                        return _.reduce(stepsToExecute, function(promise, step) {
-                            /**
-                             * If not a promise object, means we're on the first step.
-                             * Call the first step using $.when(), which always returns a promise, regardless of whether the function
-                             * passed returns one.
-                             */
-                            if (!promise.then) {
-                                promise = $.when(internals.step.call(promise, ctx, args));
-                            }
-
-                            /**
-                             * Attach the step as success callback to the promise
-                             */
-                            return $.when(promise).then(function() {
+                        var lastPromise,
+                            chain = function() {
                                 return internals.step.call(step, ctx, [].slice.call(arguments));
-                            });
-                        });
+                            };
+
+                        for (var i = 0; i < stepsToExecute.length; i++) {
+                            var step = stepsToExecute[i];
+                            //If no promise set, then it's the first step. Execute it and continue
+                            if (!lastPromise) {
+                                lastPromise = $.when(internals.step.call(step, ctx, args));
+                                continue;
+                            }
+                            //Otherwise add next step as a done filter - don't think I need another $.when() wrapper here!
+                            lastPromise = $.when(lastPromise).then(chain);
+                        }
+
+                        return lastPromise;
 
                     },
 
@@ -399,22 +399,16 @@
 
                     //generate flow plan based on starting step name and 'skipped' steps
                     var self = this,
-                        stepsToExecute = [],
-                        stepStartIndex = 0;
-
-                    //get the starting step index
-                    if (this.startingStep) {
-                        _.each(this.steps, function(step, indx) {
-                            if (self.startingStep === step.name) {
-                                stepStartIndex = indx;
-                            }
-                        });
-                    }
+                        stepsToExecute = [];
 
                     //build execution plan
                     for (var i = 0; i < this.steps.length; i++)
                     {
-                        if (i < stepStartIndex || self.skipSteps.indexOf(self.steps[i].name) >= 0) {
+                        if (self.startingStep && self.steps[i].name !== self.startingStep) {
+                            continue;
+                        }
+
+                        if (self.skipSteps.indexOf(self.steps[i].name) >= 0) {
                             continue;
                         }
 
@@ -498,104 +492,11 @@
 
         //start over with skipped steps and starting steps..
         flows[name].skipSteps = [];
-        flows[name].startingStep = [];
+        flows[name].startingStep = null;
         flows[name].mode = defaultMode;
 
         return flows[name];
 
-    };
-
-    /**
-     * Some useful methods from underscore (underscorejs.org)
-     */
-
-    /**
-     *
-     Copyright (c) 2009-2013 Jeremy Ashkenas, DocumentCloud
-
-     Permission is hereby granted, free of charge, to any person
-     obtaining a copy of this software and associated documentation
-     files (the "Software"), to deal in the Software without
-     restriction, including without limitation the rights to use,
-     copy, modify, merge, publish, distribute, sublicense, and/or sell
-     copies of the Software, and to permit persons to whom the
-     Software is furnished to do so, subject to the following
-     conditions:
-     *
-     */
-
-    // Establish the object that gets returned to break out of a loop iteration.
-    var breaker = {};
-
-    var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
-
-    var nativeForEach      = ArrayProto.forEach,
-        nativeReduce       = ArrayProto.reduce,
-        nativeBind         = FuncProto.bind;
-
-    // Create a safe reference to the Underscore object for use below.
-    var _ = function(obj) {
-        if (obj instanceof _) return obj;
-        if (!(this instanceof _)) return new _(obj);
-        this._wrapped = obj;
-    };
-
-    _.has = function(obj, key) {
-        return ObjProto.hasOwnProperty.call(obj, key);
-    };
-
-    // The cornerstone, an `each` implementation, aka `forEach`.
-    // Handles objects with the built-in `forEach`, arrays, and raw objects.
-    // Delegates to **ECMAScript 5**'s native `forEach` if available.
-    var each = _.each = function(obj, iterator, context) {
-        if (obj === null) return;
-        if (nativeForEach && obj.forEach === nativeForEach) {
-            obj.forEach(iterator, context);
-        } else if (obj.length === +obj.length) {
-            for (var i = 0, l = obj.length; i < l; i++) {
-                if (iterator.call(context, obj[i], i, obj) === breaker) return;
-            }
-        } else {
-            for (var key in obj) {
-                if (_.has(obj, key)) {
-                    if (iterator.call(context, obj[key], key, obj) === breaker) return;
-                }
-            }
-        }
-    };
-
-    var reduceError = 'Reduce of empty array with no initial value';
-
-    // **Reduce** builds up a single result from a list of values, aka `inject`,
-    // or `foldl`. Delegates to **ECMAScript 5**'s native `reduce` if available.
-    _.reduce = function(obj, iterator, memo, context) {
-        var initial = arguments.length > 2;
-        if (obj === null) obj = [];
-        if (nativeReduce && obj.reduce === nativeReduce) {
-            if (context) iterator = _.bind(iterator, context);
-            return initial ? obj.reduce(iterator, memo) : obj.reduce(iterator);
-        }
-        each(obj, function(value, index, list) {
-            if (!initial) {
-                memo = value;
-                initial = true;
-            } else {
-                memo = iterator.call(context, memo, value, index, list);
-            }
-        });
-        if (!initial) throw new TypeError(reduceError);
-        return memo;
-    };
-
-    // Create a function bound to a given object (assigning `this`, and arguments,
-    // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
-    // available.
-    _.bind = function(func, context) {
-        if (func.bind === nativeBind && nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
-        var args = slice.call(arguments, 2);
-        return function() {
-            return func.apply(context, args.concat(slice.call(arguments)));
-        };
     };
 
     return Flow;
