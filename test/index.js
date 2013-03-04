@@ -223,8 +223,6 @@
 
                     });
 
-
-
                 });
 
                 describe("when the second argument is a flow", function(){
