@@ -100,25 +100,45 @@
                     self.defaultFailDelegate = flow;
                 }
                 return self;
-            };
-
-        return {
-            handleWith : function(callback) {
-                if (responseCode) {
-                    self.conditionalFailCallbacks[responseCode] = callback;
-                } else {
-                    self.defaultFailCallback = callback;
-                }
-
-                return self;
             },
-            loop : function() {
-                return storeDelegate(self);
-            },
-            jumpTo : function(flow) {
-                return storeDelegate(flow);
+            options = {};
+
+        /**
+         * Handle failure with a callback
+         *
+         * @param callback
+         * @return Flow
+         */
+        options.handleWith = function(callback) {
+            if (responseCode) {
+                self.conditionalFailCallbacks[responseCode] = callback;
+            } else {
+                self.defaultFailCallback = callback;
             }
+
+            return self;
         };
+        /**
+         * Handle failure by starting the flow over
+         *
+         * @return Flow
+         */
+        options.loop = function() {
+            return storeDelegate(self);
+        };
+
+        /**
+         * Handle failure by jumping to another flow
+         *
+         * @param Flow
+         * @return Flow
+         */
+        options.jumpTo = function(flow) {
+            return storeDelegate(flow);
+        };
+
+        return options;
+
     };
 
     /**
@@ -128,20 +148,29 @@
      */
     flow.prototype.onSuccess = function() {
 
-        var self = this;
+        var self = this,
+            options = {};
 
-        return {
-            jumpTo : function(flow) {
-                self.defaultSuccessDelegate = flow;
-                return self;
-            }
+        /**
+         * Handle Success by jumping to another flow
+         *
+         * @param Flow
+         * @return Flow
+         */
+        options.jumpTo = function(flow) {
+            self.defaultSuccessDelegate = flow;
+            return self;
         };
+
+        return options;
     };
 
 
 
     /**
+     * Attach a fail callback to the flow
      *
+     * @private
      * @param promise
      */
     flow.prototype.attachFailCallback = function(promise) {
@@ -179,8 +208,9 @@
     };
 
     /**
-     * Attach flows on failure
+     * Attach flow to handle failure
      *
+     * @private
      * @param promise
      */
     flow.prototype.attachFailDelegate = function(promise) {
@@ -220,6 +250,7 @@
     /**
      * Attach flows on success
      *
+     * @private
      * @param promise
      */
     flow.prototype.attachSuccessDelegate = function(promise) {
@@ -243,10 +274,9 @@
      *
      * For example, step.1, step.2, step.3, etc
      *
-     * @scope public
      * @param arg1 the name of the step or a step callback (when no name is specified)
      * @param arg2 the step callback/flow. If this is falsey and first arg is a string the function acts as a getter, otherwise it's a setter
-     * @return flow/step
+     * @return mixed Flow or step
      */
     flow.prototype.step = function(arg1, arg2) {
 
@@ -300,6 +330,7 @@
     /**
      * Execute the steps sequentially, and pass return value from upstream step to downstream step args
      *
+     * @private
      * @param ctx
      * @param stepsToExecute
      * @param args pass to first step
@@ -331,6 +362,7 @@
     /**
      * Execute all steps at once
      *
+     * @private
      * @param ctx
      * @param stepsToExecute
      * @param args passed to all steps
@@ -349,7 +381,7 @@
     /**
      * Set flow to execute in waterfall mode
      *
-     * @return {*}
+     * @return Flow
      */
     flow.prototype.parallel = function() {
         this.mode = "parallel";
@@ -359,7 +391,7 @@
     /**
      * Set flow to execute in parallel mode
      *
-     * @return {*}
+     * @return Flow
      */
     flow.prototype.waterfall = function() {
         this.mode = "waterfall";
@@ -378,6 +410,8 @@
      * Or
      *
      * flow.begin(arg1, arg2, arg3, ..);
+     *
+     * @return Flow
      *
      */
     flow.prototype.begin = function() {
@@ -433,6 +467,7 @@
      * Specify the 'this' context for the flow
      *
      * @param obj
+     * @return Flow
      */
     flow.prototype.context = function(obj) {
         this.ctx = obj;
@@ -443,7 +478,7 @@
      * Specify a step to start the flow on
      *
      * @param stepName
-     * @return {*}
+     * @return Flow
      */
     flow.prototype.startOn = function(stepName) {
         this.startingStep = stepName;
@@ -454,7 +489,7 @@
      * Specify a step to skip
      *
      * @param stepName
-     * @return {*}
+     * @return Flow
      */
     flow.prototype.skip = function(stepName) {
         this.skipSteps.push(stepName);
@@ -463,6 +498,7 @@
 
     /**
      * Remove the flow from the internal object
+     *
      */
     flow.prototype.destroy = function () {
         delete flows[this.name];
