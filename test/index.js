@@ -39,6 +39,100 @@
 
         });
 
+        describe("integration", function(){
+
+            describe("when the last step in a flow is another flow", function(){
+
+                describe("and the first step is async", function(){
+
+                    beforeEach(function() {
+
+
+                        this.childFlow = flow("childFlow")
+                            .step("step.0", sinon.stub());
+                        this.result = target
+                            .step("step.0", function() {
+                                var def = $.Deferred();
+
+                                setTimeout(function() {
+                                    def.resolve();
+                                }, 1);
+
+                                return def;
+                            })
+                            .step("step.1", sinon.stub())
+                            .step("step.2", this.childFlow)
+                            .begin();
+                    });
+
+                    it("should call steps in correct order", function(done){
+
+                        var self = this;
+                        this.result.then(function() {
+                            target.step("step.1").callback.calledBefore(self.childFlow.step("step.0"))
+                                .should.be.true;
+
+                            done();
+
+                        });
+
+                    });
+
+
+                });
+
+                describe("and the last step in the child flow resolves", function(){
+
+                    beforeEach(function() {
+                        this.childFlow = flow("childFlow")
+                            .step("step.0", function() {
+                                return $.Deferred().resolve("childResponse");
+                            });
+                        this.result = target
+                            .step("step.0", function() {})
+                            .step("step.1", this.childFlow)
+                            .begin();
+                    });
+
+                    it("should resolve the master flow promise", function(){
+
+                        this.result.then(function(response) {
+                            response.should.equal("childResponse");
+                        });
+
+                    });
+
+                });
+
+            });
+
+            describe("when the last step in a flow resolves", function(){
+
+                describe("and there are no success delegates", function(){
+
+                    beforeEach(function() {
+                        this.result = target
+                            .step("step.0", function() {})
+                            .step("step.1", function() {
+                                return $.Deferred().resolve("someData");
+                            })
+                            .begin();
+                    });
+
+                    it("should resolve the flow promise", function(){
+
+                        this.result.then(function(response) {
+                            response.should.equal("someData");
+                        })
+
+                    });
+
+                });
+
+            });
+
+        });
+
         describe("step", function(){
 
             describe("in general", function(){
@@ -936,6 +1030,56 @@
             });
         });
 
+        describe("attachFailCallback", function(){
+
+            beforeEach(function() {
+                this.context = {
+                    conditionalFailCallbacks: {}
+                };
+
+                this.promise = {
+                    fail : sinon.stub()
+                };
+
+            });
+
+            it("should call the fail method on the promise argument", function() {
+
+                target.attachFailCallback.call(this.context, this.promise);
+
+                this.promise.fail.called.should.be.true;
+
+            });
+
+            describe("when promise fail method is fired", function(){
+
+                beforeEach(function() {
+                    this.promise.fail.callsArg(0);
+                });
+
+                describe("when there are no conditional fail callbacks that match response data", function(){
+
+                    describe("when there is a default fail callback", function(){
+
+                        beforeEach(function() {
+                            this.context.defaultFailCallback = sinon.stub();
+                            target.attachFailCallback.call(this.context, this.promise);
+                        });
+
+                        it("should call the default fail callback", function(){
+
+                            this.context.defaultFailCallback.called.should.be.true;
+
+                        });
+
+                    });
+
+                });
+
+            });
+
+        });
+
 
         describe("attachFailDelegate", function(){
 
@@ -948,7 +1092,7 @@
                             reject : sinon.stub(),
                             resolve : sinon.stub()
                         },
-                        conditionalFailDelegates: []
+                        conditionalFailDelegates: {}
                     };
 
                     this.promise = {
