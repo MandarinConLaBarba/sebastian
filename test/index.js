@@ -18,6 +18,26 @@
     }
 }(this, function($, _, sinon, should, flow) {
 
+
+    var getStubbedFlow = function(name) {
+
+        var delegateFlow = flow(name);
+
+        sinon.stub(delegateFlow, "context");
+        sinon.stub(delegateFlow, "begin");
+
+        var delegateFlowPromise = {
+            then : sinon.stub(),
+            fail : sinon.stub()
+        };
+
+        delegateFlow.context.returns(delegateFlow);
+        delegateFlow.begin.returns(delegateFlowPromise);
+
+        return delegateFlow;
+
+    };
+
     describe("flow", function(){
 
         var wrappedStubs = {},
@@ -1117,6 +1137,91 @@
 
         });
 
+        describe("attachSuccessDelegate", function(){
+
+            beforeEach(function() {
+                this.context = {
+                    masterPromise : {
+                        then : sinon.stub(),
+                        reject : sinon.stub(),
+                        resolve : sinon.stub()
+                    },
+                    defaultSuccessDelegate: null
+                };
+
+                this.promise = {
+                    then : sinon.stub()
+                };
+
+                this.promise.then.callsArg(0);
+
+                this.delegateFlow = getStubbedFlow("successDelegateFlow");
+
+            });
+
+            afterEach(function() {
+                this.delegateFlow.destroy();
+            });
+
+            describe("when there is a defaultSuccessDelegate", function(){
+
+                describe("when the master promise resolves", function(){
+
+                    describe("when defaultSuccessDelegate is a flow name", function(){
+
+                        beforeEach(function() {
+                            this.context.defaultSuccessDelegate = "successDelegateFlow";
+
+                        });
+
+                        it("should call the begin method on the success delegate flow", function(){
+
+                            target.attachSuccessDelegate.call(this.context, this.promise);
+
+                            this.delegateFlow.begin.called.should.be.true;
+
+                        });
+
+                        describe("when the success delegate resolves", function(){
+
+                            it("should resolve the master promise", function(){
+
+                                target.attachSuccessDelegate.call(this.context, this.promise);
+
+                                this.delegateFlow.begin.returnValue
+                                    .then.firstCall.args[0]();
+
+                                this.context.masterPromise.resolve.called.should.be.true;
+
+                            });
+
+
+                        });
+
+                    });
+
+                    describe("when defaultSuccessDelegate is a flow object", function(){
+
+                        beforeEach(function() {
+                            this.context.defaultSuccessDelegate  = this.delegateFlow;
+                            target.attachSuccessDelegate.call(this.context, this.promise);
+                        });
+
+                        it("should call the begin method on the success delegate flow", function(){
+
+                            this.delegateFlow.begin.called.should.be.true;
+
+                        });
+
+
+                    });
+
+                });
+
+            });
+
+        });
+
 
         describe("attachFailDelegate", function(){
 
@@ -1155,17 +1260,7 @@
 
                             beforeEach(function() {
 
-                                this.delegateFlow = flow("someDelegateFlow");
-
-                                sinon.stub(this.delegateFlow, "context");
-                                sinon.stub(this.delegateFlow, "begin");
-
-                                this.delegateFlowPromise = {
-                                    then : sinon.stub()
-                                };
-
-                                this.delegateFlow.context.returns(this.delegateFlow);
-                                this.delegateFlow.begin.returns(this.delegateFlowPromise);
+                                this.delegateFlow = getStubbedFlow("someDelegateFlow")
 
                                 this.promise.fail.callsArg(0);
 
@@ -1195,9 +1290,10 @@
 
                                 it("should resolve the masterPromise when the delegate flow is resolved", function(){
 
-                                    this.delegateFlowPromise.then.callsArg(0);
-
                                     target.attachFailDelegate.call(this.context, this.promise);
+
+                                    this.delegateFlow.begin.returnValue
+                                        .then.firstCall.args[0]();
 
                                     this.context.masterPromise.resolve.called.should.be.true;
 

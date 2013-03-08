@@ -246,7 +246,8 @@
         var self = this;
         if (this.defaultSuccessDelegate) {
             promise.then(function() {
-                var flow = Flow(self.defaultSuccessDelegate);
+                var flow = self.defaultSuccessDelegate;
+                flow = flow.flow ? flow : Flow(flow);
                 flow.context(self.ctx)
                     .begin()
                     .then(self.masterPromise.resolve);
