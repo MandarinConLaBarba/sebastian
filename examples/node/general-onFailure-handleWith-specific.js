@@ -4,7 +4,7 @@ var $ = require("jquery-deferred"),
 flow("secondFlow")
     .step("one", function() {
         console.log("executing step one in second flow...");
-        return $.Deferred().reject();
+        return $.Deferred().reject("blah");
     })
     .step("two", function() {
         console.log("executing step two in second flow...");
@@ -13,9 +13,11 @@ flow("secondFlow")
 
 console.log("beginning flow two, chained to one on failure 'blah'");
 flow("secondFlow")
-    .onFailure()
+    .onFailure("blah2")
+    .handleWith(function() {
+        console.log("it shouldn't fail here!");
+    })
+    .onFailure("blah")
     .handleWith(function() {
         console.log("it failed!");
     }).begin();
-
-

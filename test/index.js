@@ -41,12 +41,49 @@
 
         describe("integration", function(){
 
+            describe("when flow is added as a step", function(){
+
+                beforeEach(function() {
+
+                    this.childFlow = flow("childFlow")
+                        .step("step.0", sinon.stub());
+                    target
+                        .step("step.0", sinon.stub())
+                        .step("step.1", this.childFlow);
+                });
+
+
+                describe("and step before the flow-step returns arguments via deferred", function(){
+
+                    beforeEach(function() {
+                        this.stepZeroResults = ["returnValue1", "returnValue2"];
+                        target
+                            .step("step.0").callback
+                            .returns($.Deferred().resolve(this.stepZeroResults[0], this.stepZeroResults[1]));
+
+                        target.begin();
+                    });
+
+                    it("should pass individual arguments to the flow-step's first step", function(){
+
+                        var childFlowStepZeroArgs = this.childFlow.step("step.0").callback.firstCall.args;
+
+                        childFlowStepZeroArgs[0]
+                            .should.equal(this.stepZeroResults[0]);
+                        childFlowStepZeroArgs[1]
+                            .should.equal(this.stepZeroResults[1]);
+
+                    });
+                        
+                });
+
+            });
+
             describe("when the last step in a flow is another flow", function(){
 
                 describe("and the first step is async", function(){
 
                     beforeEach(function() {
-
 
                         this.childFlow = flow("childFlow")
                             .step("step.0", sinon.stub());

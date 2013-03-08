@@ -113,7 +113,7 @@
         var self = this,
             wrapFlowCallback = function(flow) {
                 return function() {
-                    return flow.context(this).begin([].slice.call(arguments));
+                    return flow.context(this).begin.apply(flow, [].slice.call(arguments));
                 };
             };
 
@@ -267,7 +267,12 @@
      */
     flow.prototype.modes.waterfall = function(ctx, stepsToExecute, args) {
 
-        var lastPromise;
+        var lastPromise,
+            chain = function(step) {
+                return function() {
+                    return internals.step.call(step, ctx, [].slice.call(arguments));
+                };
+            };
 
         for (var i = 0; i < stepsToExecute.length; i++) {
             var step = stepsToExecute[i];
@@ -277,11 +282,12 @@
                 continue;
             }
             //Otherwise add next step as a done filter - don't think I need another $.when() wrapper here!
-            lastPromise = $.when(lastPromise).then((function(stepToChain) {
-                return function() {
-                    return internals.step.call(stepToChain, ctx, [].slice.call(arguments));
-                };
-            })(step));
+//            lastPromise = $.when(lastPromise).then((function(stepToChain) {
+//                return function() {
+//                    return internals.step.call(stepToChain, ctx, [].slice.call(arguments));
+//                };
+//            })(step));
+            lastPromise = $.when(lastPromise).then(chain(step));
         }
 
         return lastPromise;
