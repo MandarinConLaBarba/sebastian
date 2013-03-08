@@ -723,6 +723,40 @@
             });
         });
 
+        describe("delay", function(){
+
+            beforeEach(function() {
+                this.result = target
+                    .step("step.0", sinon.stub())
+                    .delay(1);
+
+            });
+
+            it("should add a new step with same name as last step added plus '-delay'", function(){
+
+                var step = target.step("step.0-delay");
+
+                should.exist(step);
+
+            });
+
+            it("should return the flow object", function(){
+
+                this.result.should.equal(target);
+
+            });
+
+            it("should add a callback to the delay step that returns a deferred", function(){
+
+                var step = target.step("step.0-delay");
+
+                var result = step.callback();
+
+                result.state().should.equal('pending');
+
+            });
+        });
+
         describe("skip", function(){
 
             beforeEach(function() {

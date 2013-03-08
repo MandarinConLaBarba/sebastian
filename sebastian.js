@@ -282,12 +282,7 @@
                 lastPromise = $.when(internals.step.call(step, ctx, args));
                 continue;
             }
-            //Otherwise add next step as a done filter - don't think I need another $.when() wrapper here!
-//            lastPromise = $.when(lastPromise).then((function(stepToChain) {
-//                return function() {
-//                    return internals.step.call(stepToChain, ctx, [].slice.call(arguments));
-//                };
-//            })(step));
+
             lastPromise = $.when(lastPromise).then(chain(step));
         }
 
@@ -449,6 +444,28 @@
     flow.prototype.skip = function(stepName) {
         this.skipSteps.push(stepName);
         return this;
+    };
+
+    /**
+     * Add a delay after execution of step added last
+     *
+     * @param {Number} ms milliseconds to delay
+     * @return {Flow}
+     */
+    flow.prototype.delay = function(ms) {
+
+        var last = this.steps[this.steps.length - 1];
+
+        this.step(last.name + "-delay", function() {
+            var deferred = $.Deferred();
+
+            setTimeout(deferred.resolve, ms);
+
+            return deferred;
+        });
+
+        return this;
+
     };
 
     /**
