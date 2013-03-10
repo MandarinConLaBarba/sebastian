@@ -61,6 +61,105 @@
 
         describe("integration", function(){
 
+            describe("when 'flow::resolve::tether' is returned by first step", function(){
+
+                beforeEach(function() {
+                    this.stepDeferred = $.Deferred();
+                    var self = this;
+                    this.result = target
+                        .step("step.0", function() {
+
+                            return $.Deferred().resolve("flow::resolve::tether", self.stepDeferred);
+                        })
+                        .step("step.1", sinon.stub())
+                        .begin();
+
+                });
+
+                it("should return not execute subsequent steps", function(){
+
+                    target.step("step.1").callback.called.should.be.false;
+
+                });
+
+                describe("when the first step is pending", function(){
+
+                    it("should keep the flow deferred pending", function(){
+
+                        this.result.state().should.equal("pending");
+
+                    });
+
+
+                });
+
+                describe("when the first step is rejected", function(){
+
+                    beforeEach(function() {
+
+                        this.stepDeferred.reject();
+                    });
+
+                    it("should reject the flow deferred", function(){
+
+                        this.result.state().should.equal("rejected");
+
+                    });
+
+                });
+
+                describe("when the first step is resolved", function(){
+
+                    beforeEach(function() {
+                        this.stepDeferred.resolve();
+                    });
+
+                    it("should resolve the flow deferred", function(){
+
+                        this.result.state().should.equal("resolved");
+
+                    });
+
+                });
+
+
+            });
+
+            describe("when 'flow::resolve' is returned by first step", function(){
+
+                beforeEach(function() {
+                    this.result = target
+                        .step("step.0", function() {
+
+                            return $.Deferred().resolve("flow::resolve", "value1");
+                        })
+                        .step("step.1", sinon.stub())
+                        .begin();
+
+                });
+
+                it("should not execute subsequent steps", function(){
+
+                    target.step("step.1").callback.called.should.be.false;
+
+                });
+
+                it("should resolve the flow", function(){
+
+                    this.result.state().should.equal("resolved");
+
+                });
+
+                it("should return arguments after the first position to the master flow", function(){
+
+                    this.result.then(function(response) {
+                        response.should.equal("value1");
+                    })
+
+                });
+
+            });
+
             describe("when flow is added as a step", function(){
 
                 beforeEach(function() {

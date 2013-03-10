@@ -103,8 +103,8 @@
      * - ```flow.step(name, flow);```
      * - ```flow.step(flow);```
      *
-     * @param {Object} name name of the step or a step callback (when no name is specified)
-     * @param {Object} callback step callback/flow. If this is falsey and first arg is a string the function acts as a getter, otherwise it's a setter
+     * @param {Object} arg1 name of the step or a step callback (when no name is specified)
+     * @param {Object} arg2 step callback/flow. If this is falsey and first arg is a string the function acts as a getter, otherwise it's a setter
      * @api public
      * @return mixed Flow or step
      */
@@ -268,10 +268,26 @@
      */
     flow.prototype.modes.waterfall = function(ctx, stepsToExecute, args) {
 
-        var lastPromise,
+        var masterPromise = this.masterPromise,
+            lastPromise,
             chain = function(step) {
                 return function() {
-                    return internals.step.call(step, ctx, [].slice.call(arguments));
+                    //get the arguments into an array
+                    var args = [].slice.call(arguments);
+                    //check for the resolve command, and if found stop the flow in its tracks.
+                    if (args[0] === "flow::resolve") {
+                        //remove first arg, which is the special command
+                        args.shift();
+                        //resolve the master promise
+                        masterPromise.resolve.apply(masterPromise, args);
+                        //return (and stop flow execution).
+                        return;
+                    } else if (args[0] === "flow::resolve::tether") {
+                        //tether master promise to deferred argument...arg[1] is expected to be a Deferred!
+                        return args[1]
+                            .then(masterPromise.resolve, masterPromise.reject);
+                    }
+                    return internals.step.call(step, ctx, args);
                 };
             };
 
@@ -384,7 +400,7 @@
         if (stepsToExecute.length === 1) {
             promise = $.when(internals.step.call(stepsToExecute[0], self.ctx, args));
         } else {
-            promise = this.modes[this.mode](self.ctx, stepsToExecute, args);
+            promise = this.modes[this.mode].call(self, self.ctx, stepsToExecute, args);
         }
 
         //attach failure callback wrapper...this will get the failure result and decide whether to invoke conditional
@@ -411,8 +427,8 @@
      * @param {Object} context the context object for the flow
      * @return {Flow} flow
      */
-    flow.prototype.context = function(obj) {
-        this.ctx = obj;
+    flow.prototype.context = function(context) {
+        this.ctx = context;
         return this;
     };
 
@@ -426,8 +442,8 @@
      * @param {String} name name of the step to skip
      * @return {Flow} flow
      */
-    flow.prototype.startOn = function(stepName) {
-        this.startingStep = stepName;
+    flow.prototype.startOn = function(name) {
+        this.startingStep = name;
         return this;
     };
 
@@ -441,8 +457,8 @@
      * @param {String} name name of the step to skip
      * @return {Flow} Flow
      */
-    flow.prototype.skip = function(stepName) {
-        this.skipSteps.push(stepName);
+    flow.prototype.skip = function(name) {
+        this.skipSteps.push(name);
         return this;
     };
 
@@ -585,7 +601,7 @@
      * Flow factory/constructor
      *
      * @param {String} name name of the flow
-     * @return {*}
+     * @return {Flow}
      * @constructor
      */
     Flow = function(name) {
