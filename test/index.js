@@ -61,6 +61,26 @@
 
         describe("integration", function(){
 
+            describe("when a flow is already running", function(){
+
+                beforeEach(function() {
+
+                    target.step("step.0", sinon.stub());
+                    target.step("step.0").callback.returns($.Deferred());
+
+
+                    this.result = target.begin();
+                    this.result2 = target.begin();
+                });
+
+                it("should return the master deferred from the first execution", function(){
+
+                    this.result.should.equal(this.result2);
+
+                });
+
+            });
+
             describe("when 'flow::resolve::tether' is returned by first step", function(){
 
                 beforeEach(function() {

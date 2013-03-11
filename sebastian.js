@@ -370,6 +370,11 @@
      */
     flow.prototype.begin = function() {
 
+        if (this.masterPromise &&
+            this.masterPromise.state() === "pending") {
+            return this.masterPromise;
+        }
+
         //generate flow plan based on starting step name and 'skipped' steps
         var self = this,
             stepsToExecute = [];
