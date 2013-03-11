@@ -1,6 +1,6 @@
 {
   "name": "sebastian",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "main": [
     "./sebastian.js"
   ],

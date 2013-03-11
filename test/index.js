@@ -33,6 +33,7 @@
 
         delegateFlow.context.returns(delegateFlow);
         delegateFlow.begin.returns(delegateFlowPromise);
+        delegateFlow.flow = true;
 
         return delegateFlow;
 
@@ -55,13 +56,35 @@
 
             _.invoke(wrappedStubs, 'restore');
 
-            target.destroy();
-
         });
 
         describe("integration", function(){
 
-            describe("when a flow is already running", function(){
+            describe("when a flow of different name is already running", function(){
+
+                beforeEach(function() {
+
+                    target.step("step.0", sinon.stub());
+                    target.step("step.0").callback.returns($.Deferred());
+
+                    this.result = target.begin();
+                    var differentFlow = flow("aDifferentFlow")
+                        .step("step.0", sinon.stub());
+                    differentFlow.step("step.0").callback.returns($.Deferred());
+                    this.result2 = differentFlow.begin();
+
+                });
+
+                it("should NOT return the master deferred from the first flow", function(){
+
+                    this.result.should.not.equal(this.result2);
+
+                });
+
+
+            });
+
+            describe("when a flow of same name is already running", function(){
 
                 beforeEach(function() {
 
@@ -377,10 +400,6 @@
                         target.step(this.flowStep);
                     });
 
-                    afterEach(function() {
-                        this.flowStep.destroy();
-                    });
-
 
                     it("should create a new object in the steps array with a name in the format of " +
                         "'step.{length}.{flow.name}'", function() {
@@ -459,42 +478,6 @@
                     });
                 });
 
-                describe("when second argument is a string", function(){
-
-                    beforeEach(function() {
-                        this.flowStep = flow("someOtherFlow");
-                        sinon.stub(this.flowStep, "begin");
-
-                        this.result = target.step("one", "someOtherFlow");
-                    });
-
-                    beforeEach(function() {
-                        this.found = _.find(target.steps, function(step) {
-                            return step.name === "one";
-                        });
-                    });
-
-                    afterEach(function() {
-                        this.flowStep.destroy();
-                    });
-
-                    it("should create a new object in the steps array with the name", function() {
-
-                        this.found.name.should.equal("one");
-
-                    });
-
-                    it("should create a new object in the steps array with a " +
-                        "callback that calls the begin method on the flow with name matching the second argument", function() {
-
-                        this.found.callback();
-
-                        this.flowStep.begin.called.should.be.true;
-
-                    });
-
-                });
-
                 describe("when the second argument is a flow", function(){
 
                     beforeEach(function() {
@@ -508,10 +491,6 @@
                         this.found = _.find(target.steps, function(step) {
                             return step.name === "one";
                         });
-                    });
-
-                    afterEach(function() {
-                        this.flowStep.destroy();
                     });
 
                     it("should create a new object in the steps array with a name", function() {
@@ -971,12 +950,14 @@
                 describe("when there is an argument to onFailure", function(){
 
                     beforeEach(function() {
-                        target.onFailure("blah").jumpTo(flow("secondFlow"));
+
+                        this.expectedDelegateFlow = flow("secondFlow");
+                        target.onFailure("blah").jumpTo(this.expectedDelegateFlow);
                     });
 
                     it("should add an object to the conditionalFailDelegates object", function() {
 
-                        target.conditionalFailDelegates.blah.should.equal(flow("secondFlow"));
+                        target.conditionalFailDelegates.blah.should.equal(this.expectedDelegateFlow);
 
                     });
                 });
@@ -984,12 +965,15 @@
                 describe("when there is NOT an argument to onFailure", function(){
 
                     beforeEach(function() {
-                        target.onFailure().jumpTo(flow("secondFlow"));
+
+                        this.expectedDelegateFlow = flow("secondFlow");
+
+                        target.onFailure().jumpTo(this.expectedDelegateFlow);
                     });
 
                     it("should set the defaultFailDelegate", function() {
 
-                        target.defaultFailDelegate.should.equal(flow("secondFlow"));
+                        target.defaultFailDelegate.should.equal(this.expectedDelegateFlow);
 
                     });
                 });
@@ -1312,46 +1296,9 @@
 
             });
 
-            afterEach(function() {
-                this.delegateFlow.destroy();
-            });
-
             describe("when there is a defaultSuccessDelegate", function(){
 
                 describe("when the master promise resolves", function(){
-
-                    describe("when defaultSuccessDelegate is a flow name", function(){
-
-                        beforeEach(function() {
-                            this.context.defaultSuccessDelegate = "successDelegateFlow";
-
-                        });
-
-                        it("should call the begin method on the success delegate flow", function(){
-
-                            target.attachSuccessDelegate.call(this.context, this.promise);
-
-                            this.delegateFlow.begin.called.should.be.true;
-
-                        });
-
-                        describe("when the success delegate resolves", function(){
-
-                            it("should resolve the master promise", function(){
-
-                                target.attachSuccessDelegate.call(this.context, this.promise);
-
-                                this.delegateFlow.begin.returnValue
-                                    .then.firstCall.args[0]();
-
-                                this.context.masterPromise.resolve.called.should.be.true;
-
-                            });
-
-
-                        });
-
-                    });
 
                     describe("when defaultSuccessDelegate is a flow object", function(){
 
@@ -1402,7 +1349,6 @@
 
                     this.promise.fail.called.should.be.true;
 
-
                 });
 
                 describe("when the fail callback is fired", function(){
@@ -1413,23 +1359,17 @@
 
                             beforeEach(function() {
 
-                                this.delegateFlow = getStubbedFlow("someDelegateFlow")
+                                this.delegateFlow = getStubbedFlow("someDelegateFlow");
 
                                 this.promise.fail.callsArg(0);
 
                             });
-
-                            afterEach(function() {
-                                flow("someDelegateFlow").destroy();
-                            });
-
 
                             describe("when defaultFailDelegate is a flow object", function(){
 
                                 beforeEach(function() {
 
                                     this.context.defaultFailDelegate = this.delegateFlow;
-
                                     target.attachFailDelegate.call(this.context, this.promise);
                                 });
 
@@ -1452,24 +1392,6 @@
 
                                 });
 
-                            });
-
-                            describe("when defaultFailDelegate is a string", function(){
-
-                                beforeEach(function() {
-
-                                    this.context.defaultFailDelegate = this.delegateFlow.name;
-
-                                    target.attachFailDelegate.call(this.context, this.promise);
-                                });
-
-                                it("should call the begin method on the flow with name " +
-                                    "that matches defaultFailDelegate", function() {
-
-
-                                    this.delegateFlow.begin.called.should.be.true;
-
-                                });
                             });
 
                         });

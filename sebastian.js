@@ -19,9 +19,6 @@
     }
 }(this, function(root, Flow, $) {
 
-    var flows = {},
-        defaultMode = "waterfall";
-
     var internals = {
         /**
          * Private method for executing a step
@@ -39,6 +36,11 @@
     };
 
     var flow = function(name) {
+
+        /**
+         * Initialize the main flow promise
+         */
+        this.masterPromise = $.Deferred();
 
         /*!
          * The flow name
@@ -226,9 +228,11 @@
                 return self.masterPromise.reject(response);
             }
 
-            var flow = failureDelegate;
-            flow = flow.flow ? flow : Flow(failureDelegate);
-            flow.context(self.ctx)
+            if (!failureDelegate.flow) {
+                throw new Error("Flow Error: a failure flow was provided, but it doesn't appear to be a flow.");
+            }
+
+            failureDelegate.context(self.ctx)
                 .begin()
                 .then(self.masterPromise.resolve);
 
@@ -370,11 +374,6 @@
      */
     flow.prototype.begin = function() {
 
-        if (this.masterPromise &&
-            this.masterPromise.state() === "pending") {
-            return this.masterPromise;
-        }
-
         //generate flow plan based on starting step name and 'skipped' steps
         var self = this,
             stepsToExecute = [];
@@ -397,8 +396,6 @@
         if (stepsToExecute.length === 0) {
             return $.Deferred().reject("There are no steps to execute in current execution plan.");
         }
-
-        this.masterPromise = $.Deferred();
 
         var promise,
             args = [].slice.call(arguments);
@@ -487,18 +484,6 @@
 
         return this;
 
-    };
-
-    /**
-     * Remove the flow from the internal object
-     *
-     * Usage:
-     *
-     * - ```flow.destroy();```
-     *
-     */
-    flow.prototype.destroy = function () {
-        delete flows[this.name];
     };
 
     /**
@@ -611,16 +596,7 @@
      */
     Flow = function(name) {
 
-        if (!flows[name]) {
-            flows[name] = new flow(name);
-        }
-
-        //start over with skipped steps and starting steps..
-        flows[name].skipSteps = [];
-        flows[name].startingStep = null;
-        flows[name].mode = defaultMode;
-
-        return flows[name];
+        return new flow(name);
 
     };
 
