@@ -72,7 +72,7 @@
 
                 });
 
-                describe("and it the begin method is called twice", function(){
+                describe("and the begin method is called twice", function(){
 
                     beforeEach(function() {
                         this.stepZeroReturnValue = $.Deferred();
