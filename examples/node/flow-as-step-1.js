@@ -2,7 +2,7 @@ var $ = require("jquery-deferred"),
     flow = require("../../sebastian").flow;
 
 
-flow("examples.flow.one")
+var flowOne = flow("examples.flow.one")
     .step("one", function() {
         console.log("flow one, step one..");
         console.log(arguments);
@@ -20,6 +20,6 @@ flow("examples.flow.two")
         console.log("flow two, step one..");
         return $.Deferred().resolve("one", "two");
     })
-    .step("two", flow("examples.flow.one"))
+    .step("two", flowOne)
     .begin();
 

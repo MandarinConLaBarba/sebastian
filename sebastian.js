@@ -32,15 +32,270 @@
          */
         step : function(ctx, args) {
             return this.callback.apply(ctx, args);
+        },
+        onceCache : {}
+    };
+
+    /**
+     * Execution constructor
+     * @param flow
+     */
+    var execution = function(flow) {
+
+        this.masterPromise = $.Deferred();
+
+        this.flow = flow;
+
+    };
+
+    /**
+     * Execute the flow
+     *
+     * @param args
+     * @returns {Deferred}
+     */
+    execution.prototype.execute = function(args) {
+
+        /*!
+         * If once() applied, check for a cached deferred
+         */
+        if (this.flow.runOnce) {
+            var cached = internals.onceCache[this.flow.name];
+            /*!
+             * If cached, use the cached promise, otherwise cache it
+             */
+            if (cached) {
+                return cached;
+            } else {
+                internals.onceCache[this.flow.name] = this.masterPromise;
+            }
+        }
+
+        //generate execution plan based on starting step name and 'skipped' steps
+        var self = this,
+            stepsToExecute = [];
+
+        //build execution plan
+        for (var i = 0; i < this.flow.steps.length; i++)
+        {
+            if (this.flow.startingStep && this.flow.steps[i].name !== this.flow.startingStep) {
+                continue;
+            }
+
+            if (this.flow.skipSteps.indexOf(this.flow.steps[i].name) >= 0) {
+                continue;
+            }
+
+            stepsToExecute.push(this.flow.steps[i]);
+
+        }
+
+        if (stepsToExecute.length === 0) {
+            return $.Deferred().reject("There are no steps to execute in current execution plan.");
+        }
+
+        var promise;
+        if (stepsToExecute.length === 1) {
+            promise = $.when(internals.step.call(stepsToExecute[0], self.flow.ctx, args));
+        } else {
+            promise = this.modes[this.flow.mode].call(self, this.flow.ctx, stepsToExecute, args);
+        }
+
+        //attach failure callback wrapper...this will get the failure result and decide whether to invoke conditional
+        //callbacks or the general failure callback
+        this.attachFailCallback(promise);
+
+        //jump to any flows specified by 'jumpTo'
+        this.attachFailDelegate(promise);
+        this.attachSuccessDelegate(promise);
+
+        promise.then(this.masterPromise.resolve);
+
+        return this.masterPromise;
+
+    };
+
+    /**
+     * Attach a fail callback to the execution
+     *
+     * @param {Promise} promise
+     * @api private
+     */
+    execution.prototype.attachFailCallback = function(promise) {
+
+        var self = this;
+
+        //Attach wrapper failure callback
+        promise.fail(function(response) {
+            var code = response && response.responseCode ?
+                response.responseCode : response;
+
+            var failureCallback,
+                conditionalCallback = self.flow.conditionalFailCallbacks[code];
+
+            //If there's a conditional failure callback, set it to common variable
+            if (conditionalCallback) {
+                failureCallback = conditionalCallback;
+                //Else, set it to the default (declared on flow w/ onFailure())
+            } else if (self.flow.defaultFailCallback) {
+                failureCallback = self.flow.defaultFailCallback;
+                //Else return
+            } else {
+                return;
+            }
+
+            //If there's a context, invoke .call(ctx)
+            if (self.flow.ctx) {
+                failureCallback.call(self.flow.ctx, response);
+                //Else call 'normally'
+            } else {
+                failureCallback(response);
+            }
+        });
+
+    };
+
+    /**
+     * Attach flow to handle failure
+     *
+     * @param {Promise} promise
+     * @api private
+     */
+    execution.prototype.attachFailDelegate = function(promise) {
+
+        var self = this;
+
+        promise.fail(function(response) {
+            var code = response && response.responseCode ?
+                response.responseCode : response;
+
+            var failureDelegate,
+                conditionalDelegate = self.flow.conditionalFailDelegates[code];
+
+            //If there's a conditional failure callback, set it to common variable
+            if (conditionalDelegate) {
+                failureDelegate = conditionalDelegate;
+            } else if (self.flow.defaultFailDelegate) {
+                //Else if there's a defaultFailDelegate, set it to the default (declared on flow class)
+                failureDelegate = self.flow.defaultFailDelegate;
+            } else {
+                /**
+                 * Else if we found no delegate, go ahead and reject the main promise for the flow
+                 */
+                return self.masterPromise.reject(response);
+            }
+
+            //TODO: figure out why I can't do delegate.flow instanceof flow - flow is null for some reason
+            if (!failureDelegate.flow) {
+                throw new Error("Flow Error: a failure flow was provided, but it doesn't appear to be a flow.");
+            }
+
+            failureDelegate.context(self.flow.ctx)
+                .begin()
+                .then(self.masterPromise.resolve);
+
+        });
+
+    };
+
+    /**
+     * Attach flow to handle success
+     *
+     * @param {Promise} promise
+     * @api private
+     */
+    execution.prototype.attachSuccessDelegate = function(promise) {
+        var exe = this;
+        if (this.flow.defaultSuccessDelegate) {
+            promise.then(function() {
+                var delegate = exe.flow.defaultSuccessDelegate;
+                //TODO: figure out why I can't do delegate.flow instanceof flow - flow is null for some reason
+                if (delegate.flow !== true) {
+                    throw new Error("Flow Error: a success flow was provided, but it doesn't appear to be a flow.");
+                }
+                delegate.context(exe.flow.ctx)
+                    .begin()
+                    .then(exe.masterPromise.resolve);
+
+            });
         }
     };
 
-    var flow = function(name) {
+    execution.prototype.modes = {};
 
-        /**
-         * Initialize the main flow promise
-         */
-        this.masterPromise = $.Deferred();
+    /**
+     * Execute the steps sequentially, and pass return value from upstream step to downstream step args
+     *
+     * @param ctx
+     * @param stepsToExecute
+     * @param args pass to first step
+     * @api private
+     * @return {*}
+     */
+    execution.prototype.modes.waterfall = function(ctx, stepsToExecute, args) {
+
+        var masterPromise = this.masterPromise,
+            lastPromise,
+            chain = function(step) {
+                return function() {
+                    //get the arguments into an array
+                    var args = [].slice.call(arguments);
+                    //check for the resolve command, and if found stop the flow in its tracks.
+                    if (args[0] === "flow::resolve") {
+                        //remove first arg, which is the special command
+                        args.shift();
+                        //resolve the master promise
+                        masterPromise.resolve.apply(masterPromise, args);
+                        //return (and stop flow execution).
+                        return;
+                    } else if (args[0] === "flow::resolve::tether") {
+                        //tether master promise to deferred argument...arg[1] is expected to be a Deferred!
+                        return args[1]
+                            .then(masterPromise.resolve, masterPromise.reject);
+                    }
+
+                    return internals.step.call(step, ctx, args);
+                };
+            };
+
+        for (var i = 0; i < stepsToExecute.length; i++) {
+            var step = stepsToExecute[i];
+            //If no promise set, then it's the first step. Execute it and continue
+            if (!lastPromise) {
+                lastPromise = $.when(internals.step.call(step, ctx, args));
+                continue;
+            }
+
+            lastPromise = $.when(lastPromise).then(chain(step));
+        }
+
+        return lastPromise;
+
+    };
+
+    /**
+     * Execute all steps at once
+     *
+     * @param ctx
+     * @param stepsToExecute
+     * @param args passed to all steps
+     * @api private
+     * @return {*}
+     */
+    execution.prototype.modes.parallel = function(ctx, stepsToExecute, args) {
+        var promises = [];
+        for (var index in stepsToExecute) {
+            promises.push(internals.step.call(stepsToExecute[index], ctx, args));
+        }
+
+        return $.when.apply(null, promises);
+    };
+
+    /**
+     * flow constructor
+     * @param name
+     */
+    var flow = function(name) {
 
         /*!
          * The flow name
@@ -90,6 +345,13 @@
          * The default execution mode is waterfall
          */
         this.mode = "waterfall";
+
+        /*!
+         * Expose for testing, would rather do this another way..
+         */
+        this.internals = {
+            execution : execution
+        };
     };
 
     /**
@@ -159,178 +421,6 @@
     };
 
     /**
-     * Attach a fail callback to the flow
-     *
-     * @param {Promise} promise
-     * @api private
-     */
-    flow.prototype.attachFailCallback = function(promise) {
-
-        var self = this;
-
-        //Attach wrapper failure callback
-        promise.fail(function(response) {
-            var code = response && response.responseCode ?
-                response.responseCode : response;
-
-            var failureCallback,
-                conditionalCallback = self.conditionalFailCallbacks[code];
-
-            //If there's a conditional failure callback, set it to common variable
-            if (conditionalCallback) {
-                failureCallback = conditionalCallback;
-                //Else, set it to the default (declared on flow w/ onFailure())
-            } else if (self.defaultFailCallback) {
-                failureCallback = self.defaultFailCallback;
-                //Else return
-            } else {
-                return;
-            }
-
-            //If there's a context, invoke .call(ctx)
-            if (self.ctx) {
-                failureCallback.call(self.ctx, response);
-                //Else call 'normally'
-            } else {
-                failureCallback(response);
-            }
-        });
-
-    };
-
-    /**
-     * Attach flow to handle failure
-     *
-     * @param {Promise} promise
-     * @api private
-     */
-    flow.prototype.attachFailDelegate = function(promise) {
-
-        var self = this;
-
-        promise.fail(function(response) {
-            var code = response && response.responseCode ?
-                response.responseCode : response;
-
-            var failureDelegate,
-                conditionalDelegate = self.conditionalFailDelegates[code];
-
-            //If there's a conditional failure callback, set it to common variable
-            if (conditionalDelegate) {
-                failureDelegate = conditionalDelegate;
-            } else if (self.defaultFailDelegate) {
-                //Else if there's a defaultFailDelegate, set it to the default (declared on flow class)
-                failureDelegate = self.defaultFailDelegate;
-            } else {
-                /**
-                 * Else if we found no delegate, go ahead and reject the main promise for the flow
-                 */
-                return self.masterPromise.reject(response);
-            }
-
-            if (!failureDelegate.flow) {
-                throw new Error("Flow Error: a failure flow was provided, but it doesn't appear to be a flow.");
-            }
-
-            failureDelegate.context(self.ctx)
-                .begin()
-                .then(self.masterPromise.resolve);
-
-        });
-
-    };
-
-    /**
-     * Attach flows on success
-     *
-     * @param {Promise} promise
-     * @api private
-     */
-    flow.prototype.attachSuccessDelegate = function(promise) {
-        var self = this;
-        if (this.defaultSuccessDelegate) {
-            promise.then(function() {
-                var flow = self.defaultSuccessDelegate;
-                flow = flow.flow ? flow : Flow(flow);
-                flow.context(self.ctx)
-                    .begin()
-                    .then(self.masterPromise.resolve);
-
-            });
-        }
-    };
-
-    flow.prototype.modes = {};
-    /**
-     * Execute the steps sequentially, and pass return value from upstream step to downstream step args
-     *
-     * @param ctx
-     * @param stepsToExecute
-     * @param args pass to first step
-     * @api private
-     * @return {*}
-     */
-    flow.prototype.modes.waterfall = function(ctx, stepsToExecute, args) {
-
-        var masterPromise = this.masterPromise,
-            lastPromise,
-            chain = function(step) {
-                return function() {
-                    //get the arguments into an array
-                    var args = [].slice.call(arguments);
-                    //check for the resolve command, and if found stop the flow in its tracks.
-                    if (args[0] === "flow::resolve") {
-                        //remove first arg, which is the special command
-                        args.shift();
-                        //resolve the master promise
-                        masterPromise.resolve.apply(masterPromise, args);
-                        //return (and stop flow execution).
-                        return;
-                    } else if (args[0] === "flow::resolve::tether") {
-                        //tether master promise to deferred argument...arg[1] is expected to be a Deferred!
-                        return args[1]
-                            .then(masterPromise.resolve, masterPromise.reject);
-                    }
-                    return internals.step.call(step, ctx, args);
-                };
-            };
-
-        for (var i = 0; i < stepsToExecute.length; i++) {
-            var step = stepsToExecute[i];
-            //If no promise set, then it's the first step. Execute it and continue
-            if (!lastPromise) {
-                lastPromise = $.when(internals.step.call(step, ctx, args));
-                continue;
-            }
-
-            lastPromise = $.when(lastPromise).then(chain(step));
-        }
-
-        return lastPromise;
-
-    };
-
-
-    /**
-     * Execute all steps at once
-     *
-     * @param ctx
-     * @param stepsToExecute
-     * @param args passed to all steps
-     * @api private
-     * @return {*}
-     */
-    flow.prototype.modes.parallel = function(ctx, stepsToExecute, args) {
-        var promises = [];
-        for (var index in stepsToExecute) {
-            promises.push(internals.step.call(stepsToExecute[index], ctx, args));
-        }
-
-        return $.when.apply(null, promises);
-    };
-
-
-    /**
      * Set flow to execute in parallel mode
      *
      * Usage:
@@ -374,48 +464,9 @@
      */
     flow.prototype.begin = function() {
 
-        //generate flow plan based on starting step name and 'skipped' steps
-        var self = this,
-            stepsToExecute = [];
+        var exe = new execution(this);
 
-        //build execution plan
-        for (var i = 0; i < this.steps.length; i++)
-        {
-            if (self.startingStep && self.steps[i].name !== self.startingStep) {
-                continue;
-            }
-
-            if (self.skipSteps.indexOf(self.steps[i].name) >= 0) {
-                continue;
-            }
-
-            stepsToExecute.push(self.steps[i]);
-
-        }
-
-        if (stepsToExecute.length === 0) {
-            return $.Deferred().reject("There are no steps to execute in current execution plan.");
-        }
-
-        var promise,
-            args = [].slice.call(arguments);
-        if (stepsToExecute.length === 1) {
-            promise = $.when(internals.step.call(stepsToExecute[0], self.ctx, args));
-        } else {
-            promise = this.modes[this.mode].call(self, self.ctx, stepsToExecute, args);
-        }
-
-        //attach failure callback wrapper...this will get the failure result and decide whether to invoke conditional
-        //callbacks or the general failure callback
-        this.attachFailCallback(promise);
-
-        //jump to any flows specified by 'jumpTo'
-        this.attachFailDelegate(promise);
-        this.attachSuccessDelegate(promise);
-
-        promise.then(this.masterPromise.resolve);
-
-        return this.masterPromise;
+        return exe.execute([].slice.call(arguments));
 
     };
 
@@ -446,6 +497,16 @@
      */
     flow.prototype.startOn = function(name) {
         this.startingStep = name;
+        return this;
+    };
+
+    /**
+     * Set the flow to only run one time...always returning the promise from the first execution.
+     *
+     * @returns {Flow}
+     */
+    flow.prototype.once = function() {
+        this.runOnce = true;
         return this;
     };
 
@@ -588,7 +649,7 @@
 
 
     /**
-     * Flow factory/constructor
+     * Flow factory
      *
      * @param {String} name name of the flow
      * @return {Flow}

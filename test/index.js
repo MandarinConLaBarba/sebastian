@@ -44,11 +44,14 @@
         var wrappedStubs = {},
             resolved = $.Deferred().resolve(),
             rejected = $.Deferred().reject(),
-            target;
+            target,
+            execution;
 
         beforeEach(function() {
 
             target = flow("someFlow");
+            execution = target.internals.execution.prototype;
+
 
         });
 
@@ -60,6 +63,56 @@
 
         describe("integration", function(){
 
+            describe("when a flow has 'once' modifier", function(){
+
+                beforeEach(function() {
+                    target = flow("run.only.once")
+                        .step("step.0", sinon.stub())
+                        .once();
+
+                });
+
+                describe("and it the begin method is called twice", function(){
+
+                    beforeEach(function() {
+                        this.stepZeroReturnValue = $.Deferred();
+                        target.step("step.0").callback.returns(this.stepZeroReturnValue);
+
+                        this.result1 =  target.begin();
+                        this.result2 = target.begin();
+
+                    });
+
+                    describe("and the first flow execution is still in progress", function(){
+
+                        it("should return the same promise", function(){
+
+                            this.result1.should.equal(this.result2);
+
+                        });
+
+                    });
+
+                    describe("and the first flow execution is NOT still in progress", function(){
+
+                        beforeEach(function() {
+                            this.stepZeroReturnValue.resolve();
+                        });
+
+                        it("should return the same promise result returned from the first execution", function(){
+
+                            this.result1.should.equal(this.result2);
+
+                        });
+
+                    });
+
+
+                });
+
+
+            });
+
             describe("when a flow of different name is already running", function(){
 
                 beforeEach(function() {
@@ -68,14 +121,14 @@
                     target.step("step.0").callback.returns($.Deferred());
 
                     this.result = target.begin();
-                    var differentFlow = flow("aDifferentFlow")
+                    var differentFlow = flow("a.different.flow")
                         .step("step.0", sinon.stub());
                     differentFlow.step("step.0").callback.returns($.Deferred());
                     this.result2 = differentFlow.begin();
 
                 });
 
-                it("should NOT return the master deferred from the first flow", function(){
+                it("should NOT return the promise from the first flow", function(){
 
                     this.result.should.not.equal(this.result2);
 
@@ -84,7 +137,7 @@
 
             });
 
-            describe("when a flow of same name is already running", function(){
+            describe("when a flow of same name is run twice", function(){
 
                 beforeEach(function() {
 
@@ -96,9 +149,28 @@
                     this.result2 = target.begin();
                 });
 
-                it("should return the master deferred from the first execution", function(){
+                describe("and the first execution is pending", function(){
 
-                    this.result.should.equal(this.result2);
+                    it("should NOT return the promise from the first flow execution", function(){
+
+                        this.result.should.not.equal(this.result2);
+
+                    });
+
+
+                });
+
+                describe("and the first execution is complete", function(){
+
+                    beforeEach(function() {
+                        target.step("step.0").callback.firstCall.returnValue.resolve();
+                    });
+
+                    it("should should NOT return the deferred from the first flow execution", function(){
+
+                        this.result.should.not.equal(this.result2);
+
+                    });
 
                 });
 
@@ -229,7 +301,6 @@
                     it("should pass individual arguments to the flow-step's first step", function(){
 
                         var childFlowStepZeroArgs = this.childFlow.step("step.0").callback.firstCall.args;
-
                         childFlowStepZeroArgs[0]
                             .should.equal(this.stepZeroResults[0]);
                         childFlowStepZeroArgs[1]
@@ -517,11 +588,11 @@
 
             beforeEach(function() {
 
-                wrappedStubs.parallelMode = sinon.stub(target.modes, "parallel");
-                wrappedStubs.waterfallMode = sinon.stub(target.modes, "waterfall");
-                wrappedStubs.attachFailCallback = sinon.stub(target, "attachFailCallback");
-                wrappedStubs.attachFailDelegate = sinon.stub(target, "attachFailDelegate");
-                wrappedStubs.attachSuccessDelegate = sinon.stub(target, "attachSuccessDelegate");
+                wrappedStubs.parallelMode = sinon.stub(execution.modes, "parallel");
+                wrappedStubs.waterfallMode = sinon.stub(execution.modes, "waterfall");
+                wrappedStubs.attachFailCallback = sinon.stub(execution, "attachFailCallback");
+                wrappedStubs.attachFailDelegate = sinon.stub(execution, "attachFailDelegate");
+                wrappedStubs.attachSuccessDelegate = sinon.stub(execution, "attachSuccessDelegate");
 
             });
 
@@ -639,26 +710,26 @@
 
                 it("should not call waterfall or parallel methods", function(){
 
-                    target.modes.waterfall.called.should.be.false;
-                    target.modes.parallel.called.should.be.false;
+                    execution.modes.waterfall.called.should.be.false;
+                    execution.modes.parallel.called.should.be.false;
 
                 });
 
                 it("should call attachFailCallback", function(){
 
-                    target.attachFailCallback.called.should.be.true;
+                    execution.attachFailCallback.called.should.be.true;
 
                 });
 
                 it("should call attachFailDelegate", function(){
 
-                    target.attachFailDelegate.called.should.be.true;
+                    execution.attachFailDelegate.called.should.be.true;
 
                 });
 
                 it("should call attachSuccessDelegate", function(){
 
-                    target.attachSuccessDelegate.called.should.be.true;
+                    execution.attachSuccessDelegate.called.should.be.true;
 
                 });
 
@@ -682,31 +753,31 @@
 
                     it("should execute the steps in sequence (waterfall mode)", function() {
 
-                        target.modes.waterfall.called.should.be.true;
+                        execution.modes.waterfall.called.should.be.true;
 
                     });
 
                     it("should NOT execute the steps in parallel (parallel mode)", function(){
 
-                        target.modes.parallel.called.should.be.false;
+                        execution.modes.parallel.called.should.be.false;
 
                     });
 
                     it("should call attachFailCallback", function(){
 
-                        target.attachFailCallback.called.should.be.true;
+                        execution.attachFailCallback.called.should.be.true;
 
                     });
 
                     it("should call attachFailDelegate", function(){
 
-                        target.attachFailDelegate.called.should.be.true;
+                        execution.attachFailDelegate.called.should.be.true;
 
                     });
 
                     it("should call attachSuccessDelegate", function(){
 
-                        target.attachSuccessDelegate.called.should.be.true;
+                        execution.attachSuccessDelegate.called.should.be.true;
 
                     });
 
@@ -723,31 +794,31 @@
 
                     it("should NOT execute the steps in sequence (waterfall mode)", function() {
 
-                        target.modes.waterfall.called.should.be.false;
+                        execution.modes.waterfall.called.should.be.false;
 
                     });
 
                     it("should execute the steps in parallel (parallel mode)", function(){
 
-                        target.modes.parallel.called.should.be.true;
+                        execution.modes.parallel.called.should.be.true;
 
                     });
 
                     it("should call attachFailCallback", function(){
 
-                        target.attachFailCallback.called.should.be.true;
+                        execution.attachFailCallback.called.should.be.true;
 
                     });
 
                     it("should call attachFailDelegate", function(){
 
-                        target.attachFailDelegate.called.should.be.true;
+                        execution.attachFailDelegate.called.should.be.true;
 
                     });
 
                     it("should call attachSuccessDelegate", function(){
 
-                        target.attachSuccessDelegate.called.should.be.true;
+                        target.internals.execution.prototype.attachSuccessDelegate.called.should.be.true;
 
                     });
 
@@ -1005,9 +1076,14 @@
 
             describe("waterfall", function(){
 
+                beforeEach(function() {
+                    target = target.internals.execution.prototype.modes.waterfall;
+                });
+
                 describe("when third argument is not empty", function(){
 
                     beforeEach(function() {
+
                         this.arg1 = "firstArg";
                         this.arg2 = "secondArg";
 
@@ -1015,7 +1091,7 @@
                             stub.returns($.Deferred().resolve());
                         });
 
-                        target.modes.waterfall(null, this.stepsToExecute, [this.arg1, this.arg2]);
+                        target(null, this.stepsToExecute, [this.arg1, this.arg2]);
                     });
 
                     it("should pass third arguments to first step", function() {
@@ -1044,7 +1120,7 @@
                             stub.returns($.Deferred().resolve());
                         });
 
-                        target.modes.waterfall(null, this.stepsToExecute);
+                        target(null, this.stepsToExecute);
 
                     });
 
@@ -1073,7 +1149,7 @@
                     this.stubbedSteps.one.returns(stepOneDeferred);
                     this.stubbedSteps.two.returns(stepTwoDeferred);
 
-                    target.modes.waterfall(null, this.stepsToExecute);
+                    target(null, this.stepsToExecute);
 
                     this.stubbedSteps.two.called.should.be.false;
 
@@ -1093,7 +1169,7 @@
                     this.stubbedSteps.one.returns(stepOneDeferred);
                     this.stubbedSteps.two.returns(stepTwoDeferred);
 
-                    target.modes.waterfall(null, this.stepsToExecute);
+                    target(null, this.stepsToExecute);
 
                     this.stubbedSteps.two.called.should.be.false;
 
@@ -1113,7 +1189,7 @@
                     this.stubbedSteps.one.returns(stepOneDeferred);
                     this.stubbedSteps.two.returns(stepTwoDeferred);
 
-                    target.modes.waterfall(null, this.stepsToExecute);
+                    target(null, this.stepsToExecute);
 
                     this.stubbedSteps.two.called.should.be.false;
 
@@ -1132,7 +1208,7 @@
                     this.stubbedSteps.one.returns(stepOneDeferred);
                     this.stubbedSteps.two.returns(stepTwoDeferred);
 
-                    target.modes.waterfall(null, this.stepsToExecute);
+                    target(null, this.stepsToExecute);
 
                     this.stubbedSteps.two.called.should.be.false;
 
@@ -1148,6 +1224,10 @@
 
             describe("parallel", function(){
 
+                beforeEach(function() {
+                    target = target.internals.execution.prototype.modes.parallel;
+                });
+
                 describe("when all steps resolve", function(){
 
                     beforeEach(function() {
@@ -1155,7 +1235,7 @@
                             stub.returns($.Deferred().resolve());
                         });
 
-                        target.modes.parallel(null, this.stepsToExecute);
+                        target(null, this.stepsToExecute);
 
                     });
 
@@ -1175,7 +1255,7 @@
                             stub.returns($.Deferred().reject());
                         });
 
-                        target.modes.parallel(null, this.stepsToExecute);
+                        target(null, this.stepsToExecute);
 
                     });
 
@@ -1200,7 +1280,7 @@
                             stub.returns($.Deferred().resolve());
                         });
 
-                        target.modes.parallel(null, this.stepsToExecute, [this.arg1, this.arg2]);
+                        target(null, this.stepsToExecute, [this.arg1, this.arg2]);
                     });
 
                     it("should pass third arguments to first step", function() {
@@ -1227,7 +1307,9 @@
         describe("attachFailCallback", function(){
 
             beforeEach(function() {
-                this.context = {
+                target = target.internals.execution.prototype.attachFailCallback;
+                this.context = {};
+                this.context.flow = {
                     conditionalFailCallbacks: {}
                 };
 
@@ -1239,7 +1321,7 @@
 
             it("should call the fail method on the promise argument", function() {
 
-                target.attachFailCallback.call(this.context, this.promise);
+                target.call(this.context, this.promise);
 
                 this.promise.fail.called.should.be.true;
 
@@ -1256,13 +1338,16 @@
                     describe("when there is a default fail callback", function(){
 
                         beforeEach(function() {
-                            this.context.defaultFailCallback = sinon.stub();
-                            target.attachFailCallback.call(this.context, this.promise);
+                            this.context.flow = {
+                                conditionalFailCallbacks : {},
+                                defaultFailCallback : sinon.stub()
+                            };
+                            target.call(this.context, this.promise);
                         });
 
                         it("should call the default fail callback", function(){
 
-                            this.context.defaultFailCallback.called.should.be.true;
+                            this.context.flow.defaultFailCallback.called.should.be.true;
 
                         });
 
@@ -1277,13 +1362,12 @@
         describe("attachSuccessDelegate", function(){
 
             beforeEach(function() {
+
+                target = target.internals.execution.prototype.attachSuccessDelegate;
                 this.context = {
                     masterPromise : {
-                        then : sinon.stub(),
-                        reject : sinon.stub(),
                         resolve : sinon.stub()
-                    },
-                    defaultSuccessDelegate: null
+                    }
                 };
 
                 this.promise = {
@@ -1303,8 +1387,10 @@
                     describe("when defaultSuccessDelegate is a flow object", function(){
 
                         beforeEach(function() {
-                            this.context.defaultSuccessDelegate  = this.delegateFlow;
-                            target.attachSuccessDelegate.call(this.context, this.promise);
+                            this.context.flow = {
+                                defaultSuccessDelegate : this.delegateFlow
+                            };
+                            target.call(this.context, this.promise);
                         });
 
                         it("should call the begin method on the success delegate flow", function(){
@@ -1345,7 +1431,7 @@
 
                 it("should call the fail method on the promise argument", function() {
 
-                    target.attachFailDelegate.call(this.context, this.promise);
+                    target.internals.execution.prototype.attachFailDelegate.call(this.context, this.promise);
 
                     this.promise.fail.called.should.be.true;
 
@@ -1369,8 +1455,12 @@
 
                                 beforeEach(function() {
 
-                                    this.context.defaultFailDelegate = this.delegateFlow;
-                                    target.attachFailDelegate.call(this.context, this.promise);
+                                    this.context.flow = {
+                                        conditionalFailDelegates : {},
+                                        defaultFailDelegate : this.delegateFlow
+                                    };
+
+                                    target.internals.execution.prototype.attachFailDelegate.call(this.context, this.promise);
                                 });
 
 
@@ -1383,7 +1473,7 @@
 
                                 it("should resolve the masterPromise when the delegate flow is resolved", function(){
 
-                                    target.attachFailDelegate.call(this.context, this.promise);
+                                    target.internals.execution.prototype.attachFailDelegate.call(this.context, this.promise);
 
                                     this.delegateFlow.begin.returnValue
                                         .then.firstCall.args[0]();
@@ -1403,7 +1493,11 @@
                                 this.failValue = "someFailureCode";
                                 this.promise.fail.callsArgWith(0, this.failValue);
 
-                                target.attachFailDelegate.call(this.context, this.promise);
+                                this.context.flow = {
+                                    conditionalFailDelegates : {}
+                                };
+
+                                target.internals.execution.prototype.attachFailDelegate.call(this.context, this.promise);
                             });
 
                             it("should reject the master promise", function() {
