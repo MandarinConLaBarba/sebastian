@@ -1,0 +1,12 @@
+{
+    "name" : "sebastian-gh-page",
+    "version":"0.0.0",
+    "dependencies":
+    {
+        "dox" : "*",
+        "ejs" : "*",
+        "request" : "*",
+        "sebastian" : "*",
+        "jquery-deferred" : "0.3.0"
+    }
+}

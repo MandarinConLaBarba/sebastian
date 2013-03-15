@@ -59,10 +59,10 @@
 
             <p>A step is comprised of:
 
-                <ul>
-                    <li>a name</li>
-                    <li>a callback function or another flow</li>
-                </ul>
+            <ul>
+                <li>a name</li>
+                <li>a callback function or another flow</li>
+            </ul>
             </p>
 
             <h4>Keep it simple</h4>
@@ -90,184 +90,41 @@
 
             <p>A flow is comprised of:
 
-                <ul>
-                    <li>One or more steps</li>
-                    <li>Zero or more failure callbacks</li>
-                    <li>Zero or more failure delegates</li>
-                    <li>An optional success delegate</li>
-                    <li>An optional context</li>
-                </ul>
+            <ul>
+                <li>One or more steps</li>
+                <li>Zero or more failure callbacks</li>
+                <li>Zero or more failure delegates</li>
+                <li>An optional success delegate</li>
+                <li>An optional context</li>
+            </ul>
             </p>
 
             <h3>Flow API</h3>
 
-            <h4>Add a new step</h4>
+            <div class="row" id="apiMethodContainer">
 
-            <ul>
-                <li>
-                    <code>flow.step(stepName, stepCallback);</code>
-                </li>
-            </ul>
-
-            <h5>Overloads:</h5>
-
-            <ul>
-                <li>
-                    <code>flow.step(stepCallback);</code>
-                </li>
-                <li>
-                    <code>flow.step(stepName, anotherFlow);</code>
-                </li>
-                <li>
-                    <code>flow.step(anotherFlow);</code>
-                </li>
-            </ul>
-
-            <h4>Get a previously defined step</h4>
-
-            <ul>
-                <li>
-                    <code>flow.step(stepName);</code>
-                </li>
-            </ul>
-
-            <h4>Handle failure with a callback</h4>
-
-            <p>NOTE: Only executed if the flow fails, and no other specific failure callbacks are suitable</p>
-
-            <ul>
-                <li>
-                    <code>flow.onFailure().handleWith(callback)</code>
-                </li>
-            </ul>
-
-            <h4>Handle specific failure response with a callback</h4>
-
-            <p>NOTE: Only executed if the flow fails with a particular return value.</p>
-
-            <ul>
-                <li>
-                    <code>flow.onFailure("someAnticipatedReturnValue").handleWith(callback);</code>
-                </li>
-            </ul>
-
-            <h4>Handle failure with another flow</h4>
-
-            <p>Delegates to another flow in the event of a failure. Only executed if no specific failure flows are suitable</p>
-
-            <ul>
-                <li>
-                    <code>flow.onFailure().jumpTo(anotherFlow);</code>
-                </li>
-            </ul>
-
-            <h5>Overloads</h5>
-
-            <ul>
-                <li>
-                    <code>flow.onFailure().jumpTo(anotherFlowName);</code>
-                </li>
-            </ul>
-
-            <h4>Handle specific failure with another flow</h4>
-
-            <ul>
-                <li>
-                    <code>flow.onFailure("someAnticipatedReturnValue").jumpTo(anotherFlow);</code>
-                </li>
-            </ul>
-
-            <h5>Overloads</h5>
-
-            <ul>
-                <li>
-                    <code>flow.onFailure("someAnticipatedReturnValue").jumpTo(anotherFlowName);</code>
-                </li>
-            </ul>
-
-            <h4>Handle failure by starting the flow over (loop)</h4>
-
-            <ul>
-                <li>
-                    <code>flow.onFailure().loop();</code>
-                </li>
-            </ul>
-
-            <h4>Handle specific failure by starting the flow over (loop)</h4>
-
-            <ul>
-                <li>
-                    <code>flow.onFailure("someAnticipatedReturnValue").loop();</code>
-                </li>
-            </ul>
-
-            <h4>Start a flow on a particular step</h4>
-
-            <ul>
-                <li>
-                    <code>flow.startOn(stepName);</code>
-                </li>
-            </ul>
-
-            <h4>Skip a step in a flow</h4>
-
-            <p>When the flow is executed, skip a specific step.</p>
-
-            <ul>
-                <li>
-                    <code>flow.skip(stepName);</code>
-                </li>
-            </ul>
-
-            <h4>Provide context object for a flow</h4>
-
-            <p>When used, 'this' within steps will be the context object</p>
-
-            <ul>
-                <li>
-                    <code>flow.context(object);</code>
-                </li>
-            </ul>
-
-            <h4>Set the flow execute mode to run all steps in parallel</h4>
-
-            <p>NOTE: when in flow executes in parallel mode, arguments passed to flow.begin() are sent to all steps.</p>
-
-            <ul>
-                <li>
-                    <code>flow.parallel();</code>
-                </li>
-            </ul>
-
-            <h4>Set the flow execute mode to run all steps in sequence (default mode)</h4>
-
-            <p>NOTE: when in flow executes in waterfall mode, arguments passed to flow.begin() are sent to the first step.</p>
-
-            <ul>
-                <li>
-                    <code>flow.waterfall();</code>
-                </li>
-            </ul>
-
-            <h4>Begin flow execution</h4>
-
-            <ul>
-                <li>
-                    <code>flow.begin();</code>
-                </li>
-            </ul>
-
-            <h5>Overloads</h5>
-
-            <ul>
-                <li>
-                    <code>flow.begin(arg1, arg2, ..);</code>
-                </li>
-            </ul>
+            </div>
 
         </div>
 
     </div>
+
+    <script type="text/javascript">
+
+        var require = {
+            baseUrl : "scripts",
+            paths : {
+                "jquery" : "vendor/jquery/jquery.min",
+                "backbone" : "vendor/backbone-amd/backbone-min",
+                "underscore" : "vendor/underscore-amd/underscore-min",
+                "text" : "vendor/requirejs-plugins/text"
+            }
+
+        };
+
+    </script>
+
+    <script type="text/javascript" data-main="apps/api/main" src="scripts/vendor/requirejs/require.js"></script>
 
     </body>
 </html>

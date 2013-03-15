@@ -1,0 +1,7 @@
+{
+  "name": "sebastian-site",
+  "version": "0.0.0",
+  "dependencies": {
+    "backbone-amd": "~0.9.10"
+  }
+}
