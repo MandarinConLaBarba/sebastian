@@ -598,17 +598,62 @@
 
             describe("when a context is specified", function(){
 
-                beforeEach(function() {
-                    this.ctx = sinon.stub();
-                    this.result = target
-                        .step("one", sinon.stub())
-                        .context(this.ctx)
-                        .begin();
+                describe("and flow is executed once", function(){
+
+                    beforeEach(function() {
+                        this.ctx = {
+                            prop1 : "someValue"
+                        };
+                        this.result = target
+                            .step("one", function() {
+                                return this.prop1;
+                            })
+                            .context(this.ctx)
+                            .begin();
+                    });
+
+                    it("should call the steps on the ctx argument", function() {
+
+                        this.result.then(function(ret) {
+                            ret.should.equal("someValue");
+                        });
+
+                    });
+
+
                 });
 
-                it("should call the steps on the ctx argument", function() {
+                describe("and the flow is executed twice", function(){
 
-                    target.step("one").callback.calledOn(this.ctx).should.be.true;
+                    beforeEach(function() {
+                        this.ctx = {};
+                        this.result1 = target
+                            .step("one", function() {
+                                if (!this.someValue) {
+                                    this.someValue = 0;
+                                }
+                                this.someValue++;
+                                return this.someValue;
+                            })
+                            .context(this.ctx)
+                            .begin();
+
+                        this.result2 = target
+                            .context(this.ctx)
+                            .begin();
+                    });
+
+
+                    it("should maintain separate execution contexts", function(){
+
+                        this.result1.then(function(ret) {
+                            ret.should.equal(1);
+                        });
+                        this.result2.then(function(ret) {
+                            ret.should.equal(1);
+                        });
+
+                    });
 
                 });
             });

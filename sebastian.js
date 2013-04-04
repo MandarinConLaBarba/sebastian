@@ -33,12 +33,25 @@
         step : function(ctx, args) {
             return this.callback.apply(ctx, args);
         },
+
+        clone : function(source) {
+
+            var clone = {};
+
+            for (var prop in source)
+            {
+                clone[prop] = source[prop];
+            }
+            return clone;
+
+        },
         onceCache : {}
     };
 
     /**
      * Execution constructor
      * @param flow
+     * @api private
      */
     var execution = function(flow) {
 
@@ -46,12 +59,15 @@
 
         this.flow = flow;
 
+        this.ctx = internals.clone(flow.ctx);
+
     };
 
     /**
      * Execute the flow
      *
      * @param args
+     * @api private
      * @returns {Deferred}
      */
     execution.prototype.execute = function(args) {
@@ -96,9 +112,9 @@
 
         var promise;
         if (stepsToExecute.length === 1) {
-            promise = $.when(internals.step.call(stepsToExecute[0], self.flow.ctx, args));
+            promise = $.when(internals.step.call(stepsToExecute[0], self.ctx, args));
         } else {
-            promise = this.modes[this.flow.mode].call(self, this.flow.ctx, stepsToExecute, args);
+            promise = this.modes[this.flow.mode].call(self, this.ctx, stepsToExecute, args);
         }
 
         //attach failure callback wrapper...this will get the failure result and decide whether to invoke conditional
@@ -145,8 +161,8 @@
             }
 
             //If there's a context, invoke .call(ctx)
-            if (self.flow.ctx) {
-                failureCallback.call(self.flow.ctx, response);
+            if (self.ctx) {
+                failureCallback.call(self.ctx, response);
                 //Else call 'normally'
             } else {
                 failureCallback(response);
@@ -190,7 +206,7 @@
                 throw new Error("Flow Error: a failure flow was provided, but it doesn't appear to be a flow.");
             }
 
-            failureDelegate.context(self.flow.ctx)
+            failureDelegate.context(self.ctx)
                 .begin()
                 .then(self.masterPromise.resolve);
 
@@ -213,7 +229,7 @@
                 if (delegate.flow !== true) {
                     throw new Error("Flow Error: a success flow was provided, but it doesn't appear to be a flow.");
                 }
-                delegate.context(exe.flow.ctx)
+                delegate.context(exe.ctx)
                     .begin()
                     .then(exe.masterPromise.resolve);
 
@@ -294,6 +310,7 @@
     /**
      * flow constructor
      * @param name
+     * @api private
      */
     var flow = function(name) {
 
