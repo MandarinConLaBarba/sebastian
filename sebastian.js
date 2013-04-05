@@ -64,13 +64,25 @@
     };
 
     /**
+     * Set the execution context..useful when you need a context that's completely isolated from other execution contexts
+     * flow.context() can be used to set execution context for all executions, but it is only shallow-cloned when
+     * a new execution is created. Use this to set an execution-specific context
+     *
+     * @param ctx
+     */
+    execution.prototype.context = function(ctx) {
+        this.ctx = ctx;
+        return this;
+    };
+
+    /**
      * Execute the flow
      *
      * @param args
      * @api private
      * @returns {Deferred}
      */
-    execution.prototype.execute = function(args) {
+    execution.prototype.execute = function() {
 
         /*!
          * If once() applied, check for a cached deferred
@@ -110,7 +122,8 @@
             return $.Deferred().reject("There are no steps to execute in current execution plan.");
         }
 
-        var promise;
+        var promise,
+            args = [].slice.call(arguments);
         if (stepsToExecute.length === 1) {
             promise = $.when(internals.step.call(stepsToExecute[0], self.ctx, args));
         } else {
@@ -483,7 +496,26 @@
 
         var exe = new execution(this);
 
-        return exe.execute([].slice.call(arguments));
+        return exe.execute.apply(exe, [].slice.call(arguments));
+
+    };
+
+    /**
+     * Create a new execution, but don't start it, just return. Useful for setting context on the execution when you need isolation.
+     *
+     * e.g.:
+     *
+     * ```
+     * var execution = flow.create();
+     * execution.context({ some : "value"});
+     * execution.execute();
+     * ```
+     *
+     * @returns {execution}
+     */
+    flow.prototype.create = function() {
+
+        return new execution(this);
 
     };
 
