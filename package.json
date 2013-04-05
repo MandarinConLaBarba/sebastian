@@ -1,6 +1,6 @@
 {
     "name" : "sebastian",
-    "version":"0.1.14",
+    "version":"0.2.0",
     "description" : "A flow-control library aimed at encouraging organized, testable code.",
     "keywords": [
         "sebastian",
