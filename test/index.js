@@ -787,7 +787,8 @@
 
                     target
                         .step("one", sinon.stub())
-                        .step("two", sinon.stub());
+                        .step("two", sinon.stub())
+                        .step("three", sinon.stub());
                 });
 
                 describe("and the execution mode is not specified", function(){
@@ -879,14 +880,19 @@
 
                     it("should NOT execute steps before the startOn step", function() {
 
-                        target.step("one").callback.called.should.be.false;
+                        var args = wrappedStubs.waterfallMode.firstCall.args[1];
+
+                        args[0].should.not.equal(target.step("one"));
 
                     });
 
 
                     it("should execute steps on or after the startOn step", function() {
 
-                        target.step("two").callback.called.should.be.true;
+                        var args = wrappedStubs.waterfallMode.firstCall.args[1];
+
+                        args[0].should.equal(target.step("two"));
+                        args[1].should.equal(target.step("three"));
 
                     });
                 });
@@ -902,13 +908,19 @@
 
                     it("should NOT execute the skipped step", function() {
 
-                        target.step("two").callback.called.should.be.false;
+                        var args = wrappedStubs.waterfallMode.firstCall.args[1];
+
+                        args[1].should.not.equal(target.step("two"));
 
                     });
 
                     it("should execute steps that were not skipped", function(){
 
-                        target.step("one").callback.called.should.be.true;
+                        var args = wrappedStubs.waterfallMode.firstCall.args[1];
+
+                        args[0].should.equal(target.step("one"));
+                        args[1].should.equal(target.step("three"));
+
 
                     });
                 });

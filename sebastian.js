@@ -78,8 +78,6 @@
     /**
      * Execute the flow
      *
-     * @param args
-     * @api private
      * @returns {Deferred}
      */
     execution.prototype.execute = function() {
@@ -101,12 +99,17 @@
 
         //generate execution plan based on starting step name and 'skipped' steps
         var self = this,
-            stepsToExecute = [];
+            stepsToExecute = [],
+            startStepReached = false;
 
         //build execution plan
         for (var i = 0; i < this.flow.steps.length; i++)
         {
-            if (this.flow.startingStep && this.flow.steps[i].name !== this.flow.startingStep) {
+
+            if (
+                !startStepReached &&
+                this.flow.startingStep &&
+                this.flow.steps[i].name !== this.flow.startingStep) {
                 continue;
             }
 
@@ -114,6 +117,7 @@
                 continue;
             }
 
+            startStepReached = true;
             stepsToExecute.push(this.flow.steps[i]);
 
         }
@@ -451,7 +455,7 @@
     };
 
     /**
-     * Set flow to execute in parallel mode
+     * Set flow to execute all steps in parallel
      *
      * Usage:
      *
@@ -466,7 +470,7 @@
     };
 
     /**
-     * Set flow to execute in waterfall mode
+     * Set flow to execute steps in sequence, passing results from upstream step as argument to downstream step
      *
      * Usage:
      *
