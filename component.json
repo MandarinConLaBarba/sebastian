@@ -6,7 +6,7 @@
     "underscore-amd": "*",
     "jquery": "*",
     "requirejs": "*",
-    "sebastian": "*",
+    "sebastian": "0.2.1",
     "google-code-prettify": "~1.0.0"
   }
 }

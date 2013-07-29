@@ -29,7 +29,8 @@ define([
             return helper.appendSuccessMessage.call(this.$el,
                 "Step three completed, received arg " + stepOneArg + " from previous step.", 500);
 
-        });
+        })
+        .waterfall();
 
     return flow;
 

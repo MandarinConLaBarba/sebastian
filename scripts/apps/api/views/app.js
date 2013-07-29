@@ -34,10 +34,30 @@ define([
 
                             self.$el.append(methodContainer);
 
-                            if (["waterfall", "step", "parallel"].indexOf(method.get("ctx").name) > -1) {
-                                method.set("examples", [
-                                    "apps/api/examples/" + method.get("ctx").name
-                                ]);
+                            var executableExamples = [
+                                    "onSuccess().jumpTo",
+                                    "onFailure().jumpTo",
+                                    "onFailure().handleWith",
+                                    "onFailure().loop",
+                                    "once",
+                                    "waterfall",
+                                    "step",
+                                    "delay",
+                                    "context",
+                                    "skip",
+                                    "startOn",
+                                    "parallel"],
+                                examples = executableExamples.concat(
+                                    "begin",
+                                    "create"
+                                );
+
+
+                            if (examples.indexOf(method.get("ctx").name) > -1) {
+                                method.set("examples", [{
+                                    executable : executableExamples.indexOf(method.get("ctx").name) > -1 ? true : false,
+                                    path : "apps/api/examples/" + method.get("ctx").name
+                                }]);
                             }
 
                             new MethodView({

@@ -6,17 +6,16 @@ define([
     sebastian,
     helper) {
 
-
-    var flow = sebastian.flow("examples.step")
+    var flow = sebastian.flow("examples.begin")
         .step("one", function() {
-
-            return helper.appendStepCompleteMessage.call(this.$el, "one", 1000);
+            //do something..
         })
         .step("two", function() {
-
-            return helper.appendStepCompleteMessage.call(this.$el, "two", 500);
-
+            //do something else..
         });
+
+    //Begin the flow
+    flow.begin();
 
     return flow;
 

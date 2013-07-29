@@ -45,7 +45,8 @@ define([
 
             _.each(this.model.get("examples"), function(example) {
                 var exampleView = new ExampleView({
-                    target : example,
+                    executable : example.executable,
+                    target : example.path,
                     el : exampleContainer
                 });
 
@@ -53,7 +54,17 @@ define([
 
                 self.exampleViews.push(exampleView);
 
-            })
+            });
+
+            this.$el.find('.btnRunExamplePanel').hide();
+            this.$el.find('.panel.demo').hide();
+
+            if (this.exampleViews &&
+                this.exampleViews.length &&
+                this.exampleViews[0].options.executable) {
+                this.$el.find('.btnRunExamplePanel').show();
+                this.$el.find('.panel.demo').show();
+            }
 
         },
 
@@ -94,24 +105,72 @@ define([
 
         },
 
+
         showDemoPanel : function(e) {
 
             this.showPanel(e, '.demo');
 
-            if (this.exampleViews && this.exampleViews.length) {
-                var executor = this.exampleViews[0].flow().create(),
-                    demoContainer = this.$el.find('.demo');
+            if (this.exampleViews &&
+                this.exampleViews.length &&
+                this.exampleViews[0].options.executable) {
+
+                var demoContainer = this.$el.find('.demo'),
+                    flow = this.exampleViews[0].flow();
                 demoContainer.empty();
 
-                executor.context({ $el : demoContainer});
-                exampleHelper.appendFlowStartedMessage.call(demoContainer, executor.flow.name)
-                var execution = executor.execute();
 
-                execution.done(function() {
-                    exampleHelper.appendFlowCompleteMessage.call(demoContainer, executor.flow.name)
-                });
+                var direct = ["examples.context"];
+
+                if (direct.indexOf(flow.name) > -1) {
+                    this.runFlowDirectly(flow, demoContainer);
+                } else {
+                    this.runFlowViaExecution(flow, demoContainer);
+                }
+
+
+
+//                var executor = this.exampleViews[0].flow().create(),
+//                    demoContainer = this.$el.find('.demo');
+//                demoContainer.empty();
+//                exampleHelper.appendFlowStartedMessage.call(demoContainer, executor.flow.name)
+
+
+
+//                executor.context({ $el : demoContainer});
+//                var execution = executor.execute();
+//
+//                execution.done(function() {
+//                    exampleHelper.appendFlowCompleteMessage.call(demoContainer, executor.flow.name)
+//                });
 
             }
+        },
+
+        runFlowViaExecution : function(flow, demoContainer) {
+
+            var executor = flow.create();
+
+            executor.context({ $el : demoContainer});
+            exampleHelper.appendFlowStartedMessage.call(demoContainer, executor.flow.name)
+            var execution = executor.execute();
+
+            execution.done(function() {
+                exampleHelper.appendFlowCompleteMessage.call(demoContainer, executor.flow.name)
+            });
+
+
+        },
+
+        runFlowDirectly : function(flow, demoContainer) {
+
+            //TODO: fix this...this is nasty
+            flow.ctx.$el = demoContainer;
+
+            var deferred = flow.begin();
+
+            deferred.done(function() {
+                exampleHelper.appendFlowCompleteMessage.call(demoContainer, flow.name)
+            });
         }
 
     });

@@ -3,7 +3,6 @@ define(["jquery", "sebastian"], function($, sebastian) {
 
     var appendMessage = function(message, timeout) {
 
-        message = message.charAt(0).toUpperCase() + message.slice(1);
 
         var demoMessageContainer = $(document.createElement('div'))
             .addClass('demoMessage')
@@ -12,6 +11,9 @@ define(["jquery", "sebastian"], function($, sebastian) {
         var timeout = timeout ? timeout : 1,
             ret = $.Deferred(),
             self = this;
+        message = message.charAt(0).toUpperCase() + message.slice(1);
+        message = message + " (" + timeout + " ms)";
+
         setTimeout(function() {
             demoMessageContainer
                 .addClass("alert-box radius")
@@ -29,6 +31,17 @@ define(["jquery", "sebastian"], function($, sebastian) {
     return {
 
         appendMessage : appendMessage,
+        appendFailureMessage : function(message, timeout) {
+            var deferred = appendMessage.call(this, message, timeout);
+            deferred.done(function(container) {
+                container
+                    .addClass("alert");
+            });
+
+            return deferred;
+
+        },
+
         appendSuccessMessage : function(message, timeout) {
             var deferred = appendMessage.call(this, message, timeout);
             deferred.done(function(container) {
