@@ -1,0 +1,7 @@
+.idea
+.jshintignore
+.gitignore
+app.js
+examples
+node_modules
+test

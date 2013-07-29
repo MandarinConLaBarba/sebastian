@@ -1,0 +1,44 @@
+<html>
+<head>
+    <title>Example 1</title>
+</head>
+
+<body>
+
+<script type="text/javascript" src="../vendor/requirejs/require.js"></script>
+
+
+<script type="text/javascript">
+
+    require.config({
+        paths : {
+            "jquery" : "../vendor/jquery/jquery.min"
+        },
+        shim : {
+            "jquery" : {
+                exports : "$"
+            }
+        }
+    });
+
+    require(["jquery", "../sebastian"], function($, sebastian) {
+
+        //call the local definition
+        sebastian.flow("blah")
+                .step("one", function() {
+                    console.log("step one..");
+                })
+                .step("two", function() {
+                    console.log("step two..");
+                })
+                .begin();
+
+    });
+
+
+</script>
+
+
+</body>
+
+</html>

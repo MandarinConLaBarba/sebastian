@@ -1,0 +1,99 @@
+<html>
+<head>
+    <title>Example 1</title>
+</head>
+
+<body>
+
+<script type="text/javascript" src="/vendor/jquery/jquery.min.js"></script>
+<script type="text/javascript" src="/sebastian.js"></script>
+
+<script type="text/javascript">
+
+
+    console.log("beginning flow one");
+    Sebastian.flow("firstFlow")
+            .step("one", function() {
+                console.log("executing step one in firstFlow...");
+            })
+            .step("two", function() {
+                console.log("executing step two in firstFlow...");
+            }).begin();
+
+    console.log("beginning flow two");
+    Sebastian.flow("secondFlow")
+            .step("one", function() {
+                console.log("executing step one...");
+                return $.Deferred().reject("blah");
+            })
+            .step("two", function() {
+                console.log("executing step two in second flow...");
+            }).onFailure("blah").handleWith(function() {
+                console.log("it failed!");
+            }).begin();
+
+
+    console.log("beginning flow two, chained to one on failure 'blah'");
+    Sebastian.flow("secondFlow").onFailure("blah").jumpTo("firstFlow").begin();
+
+    console.log("beginning flow two, chained to one on failure ");
+    Sebastian.flow("secondFlow").onFailure().jumpTo("firstFlow").begin();
+
+
+    console.log("beginning flow one, starting on step two");
+    Sebastian.flow("firstFlow")
+            .startOn("two")
+            .begin();
+
+    console.log("beginning flow one, skipping step two");
+    Sebastian.flow("firstFlow")
+            .skip("two")
+            .begin();
+
+    $.Flow("thirdFlow")
+            .step("one", function() {
+                var deferred = $.Deferred();
+                setTimeout(function() {
+                    console.log("flow 3, step 1...");
+                    deferred.resolve();
+                }, 301);
+
+                return deferred;
+
+            })
+            .step("two", function() {
+                var deferred = $.Deferred();
+                setTimeout(function() {
+                    console.log("flow 3, step 2...");
+                    deferred.resolve();
+                }, 200);
+
+                return deferred;
+            })
+            .step("three", function() {
+                var deferred = $.Deferred();
+                setTimeout(function() {
+                    console.log("flow 3, step 3...");
+                    deferred.resolve();
+                }, 100);
+
+                return deferred;
+            })
+            .waterfall()
+            .begin();
+
+    $.Flow("thirdFlow")
+            .parallel()
+            .begin();
+
+    $.Flow("thirdFlow")
+            .parallel()
+            .onSuccess().jumpTo("firstFlow")
+            .begin();
+
+
+</script>
+
+</body>
+
+</html>
