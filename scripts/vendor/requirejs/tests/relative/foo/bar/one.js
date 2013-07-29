@@ -1,5 +1,5 @@
 define("foo/bar/one",
-            ["require", "./", "./two", "../three", "text!./message.txt"],
+            ["require", ".", "./two", "../three", "text!./message.txt"],
     function (require,   bar, two,     three,      message) {
     return {
         name: "one",

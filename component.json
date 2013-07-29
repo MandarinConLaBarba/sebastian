@@ -2,6 +2,11 @@
   "name": "sebastian-site",
   "version": "0.0.0",
   "dependencies": {
-    "backbone-amd": "~0.9.10"
+    "backbone-amd": "~0.9.10",
+    "underscore-amd": "*",
+    "jquery": "*",
+    "requirejs": "*",
+    "sebastian": "*",
+    "google-code-prettify": "~1.0.0"
   }
 }

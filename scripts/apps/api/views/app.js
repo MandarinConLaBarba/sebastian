@@ -19,18 +19,32 @@ define([
             $.getJSON("doc.json")
                 .then(function(comments) {
                     //create new method view for each comment..
-                    _.each(comments, function(comment) {
-                        var method = new MethodModel(comment);
-                        var methodContainer = $(document.createElement('div'))
-                            .addClass("methodContainer");
+                    _.chain(comments)
+                        .sortBy(function(comment) {
+                            if (comment.ctx.cons &&
+                                comment.ctx.cons === "execution") {
+                                return 1;
+                            };
+                            return -1;
+                        })
+                        .each(function(comment) {
+                            var method = new MethodModel(comment),
+                                methodContainer = $(document.createElement('div'))
+                                    .addClass("methodContainer");
 
-                        self.$el.append(methodContainer);
+                            self.$el.append(methodContainer);
 
-                        new MethodView({
-                            model : method,
-                            el : methodContainer
-                        }).render();
-                    });
+                            if (["waterfall", "step", "parallel"].indexOf(method.get("ctx").name) > -1) {
+                                method.set("examples", [
+                                    "apps/api/examples/" + method.get("ctx").name
+                                ]);
+                            }
+
+                            new MethodView({
+                                model : method,
+                                el : methodContainer
+                            }).render();
+                        });
 
                 });
 

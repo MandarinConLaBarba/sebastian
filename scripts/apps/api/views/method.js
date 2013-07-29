@@ -2,11 +2,15 @@ define([
     "jquery",
     "backbone",
     "underscore",
+    "apps/api/views/example",
+    "apps/api/examples/helper",
     "text!apps/api/templates/method.html"
 ], function(
     $,
     Backbone,
     _,
+    ExampleView,
+    exampleHelper,
     theTemplate) {
 
 
@@ -17,7 +21,7 @@ define([
         events : {
             "click .btnShowDocPanel" : "showDocPanel",
             "click .btnShowExamplePanel" : "showExamplePanel",
-            "click .btnShowTestPanel" : "showTestPanel"
+            "click .btnRunExamplePanel" : "showDemoPanel"
         },
 
         initialize : function() {
@@ -26,10 +30,30 @@ define([
 
         render : function() {
 
-            console.log(this.model.attributes);
-
             this.$el.append(this.template(this.model.toJSON()));
             this.showPanel(null, ".doc");
+
+            var self = this;
+
+            this.exampleViews = [];
+
+            var exampleContainer = $(document.createElement('div'))
+                .addClass("example")
+                .addClass("panel");
+            self.$el.find(".exampleList")
+                .append(exampleContainer);
+
+            _.each(this.model.get("examples"), function(example) {
+                var exampleView = new ExampleView({
+                    target : example,
+                    el : exampleContainer
+                });
+
+                exampleView.render();
+
+                self.exampleViews.push(exampleView);
+
+            })
 
         },
 
@@ -60,11 +84,34 @@ define([
 
         showExamplePanel : function(e) {
 
-            this.showPanel(e, '.example');
+            this.showPanel(e, '.exampleList');
+
+            if (this.exampleViews) {
+                _.each(this.exampleViews, function(view) {
+                    view.show();
+                });
+            }
+
         },
 
-        showTestPanel : function(e) {
-            this.showPanel(e, '.test');
+        showDemoPanel : function(e) {
+
+            this.showPanel(e, '.demo');
+
+            if (this.exampleViews && this.exampleViews.length) {
+                var executor = this.exampleViews[0].flow().create(),
+                    demoContainer = this.$el.find('.demo');
+                demoContainer.empty();
+
+                executor.context({ $el : demoContainer});
+                exampleHelper.appendFlowStartedMessage.call(demoContainer, executor.flow.name)
+                var execution = executor.execute();
+
+                execution.done(function() {
+                    exampleHelper.appendFlowCompleteMessage.call(demoContainer, executor.flow.name)
+                });
+
+            }
         }
 
     });

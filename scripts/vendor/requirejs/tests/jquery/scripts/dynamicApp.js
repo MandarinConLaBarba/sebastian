@@ -7,7 +7,7 @@ require({
     priority: ['jquery']
 });
 
-define(["jquery.gamma.js", "jquery.epsilon"], function() {
+define(["jquery.gamma", "jquery.epsilon"], function() {
 
     $(function () {
         doh.is('epsilon', $('body').epsilon());
