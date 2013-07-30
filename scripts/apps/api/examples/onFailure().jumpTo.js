@@ -9,7 +9,7 @@ define([
     var delegate = sebastian.flow("examples.onFailure().jumpTo.delegate")
         .step("one", function() {
 
-            return helper.appendSuccessMessage.call(this.$el, "Step one complete, in the success delegate flow.");
+            return helper.appendSuccessMessage.call(this.$el, "Step one complete, in the failure delegate flow.");
 
         });
 
