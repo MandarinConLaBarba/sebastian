@@ -4,13 +4,15 @@ define([
     "underscore",
     "apps/api/models/method",
     "apps/api/views/method",
-    "apps/api/views/nav"], function(
+    "apps/api/views/nav",
+    "apps/api/flows/splash"], function(
     $,
     Backbone,
     _,
     MethodModel,
     MethodView,
-    NavView) {
+    NavView,
+    SplashFlow) {
 
     return Backbone.View.extend({
 
@@ -85,6 +87,16 @@ define([
                     }).render();
 
                 });
+
+            SplashFlow.context({
+                    $el : this.$el.find("#splash-effect")
+                });
+
+            var loop = function() {
+                SplashFlow.begin().done(loop);
+            };
+
+            loop();
 
         }
 
