@@ -56,14 +56,14 @@ define([
                                     "context",
                                     "skip",
                                     "startOn",
-                                    "parallel"],
-                                examples = executableExamples.concat(
+                                    "parallel",
                                     "begin",
                                     "create"
-                                );
+                                ],
+                                examples = executableExamples.concat([]);
 
-
-                            if (examples.indexOf(method.get("ctx").name) > -1) {
+                            if (examples.indexOf(method.get("ctx").name) > -1 &&
+                                method.get("ctx").constructor != "execution") {
                                 method.set("examples", [{
                                     executable : executableExamples.indexOf(method.get("ctx").name) > -1 ? true : false,
                                     path : "apps/api/examples/" + method.get("ctx").name

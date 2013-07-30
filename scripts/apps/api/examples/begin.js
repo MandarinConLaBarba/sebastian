@@ -6,18 +6,20 @@ define([
     sebastian,
     helper) {
 
-    var flow = sebastian.flow("examples.begin")
-        .step("one", function() {
-            //do something..
-        })
-        .step("two", function() {
-            //do something else..
-        });
+    return {
+        execute : function(demoContainer) {
 
-    //Begin the flow
-    flow.begin();
+            var flow = sebastian.flow("examples.begin")
+                .step("one", function() {
+                    return helper.appendStepCompleteMessage.call(demoContainer, "one");
+                });
 
-    return flow;
+            //Begin the flow
+            return flow.begin();
+
+        }
+    }
+
 
 
 });

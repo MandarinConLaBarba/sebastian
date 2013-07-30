@@ -7,30 +7,33 @@ define([
     helper) {
 
 
-    var flow = sebastian.flow("examples.onFailure().handleWith")
-        .step("one", function() {
+    return {
+        execute : function(el) {
 
-            return helper.appendStepCompleteMessage.call(this.$el, "one");
+            return sebastian.flow("examples.onFailure().handleWith")
+                .step("one", function() {
 
+                    return helper.appendStepCompleteMessage.call(el, "one");
 
-        })
-        .step("two", function() {
+                })
+                .step("two", function() {
 
-            helper.appendMessage.call(this.$el, "Entering step two...");
+                    helper.appendMessage.call(el, "Entering step two...");
 
-            return $.Deferred().reject("someFailureCode");
+                    return $.Deferred().reject("someFailureCode");
 
-        })
-        .step("three", function() {
+                })
+                .step("three", function() {
 
-            //this should not be executed!
-            return helper.appendStepCompleteMessage.call(this.$el, "three");
-        })
-        .onFailure("someFailureCode").handleWith(function() {
-            return helper.appendFailureMessage.call(this.$el, "Failure successfully handled.");
-        });
-
-    return flow;
+                    //this should not be executed!
+                    return helper.appendStepCompleteMessage.call(el, "three");
+                })
+                .onFailure("someFailureCode").handleWith(function() {
+                    return helper.appendFailureMessage.call(el,
+                        "Failure successfully handled.");
+                }).begin();
+        }
+    };
 
 
 });

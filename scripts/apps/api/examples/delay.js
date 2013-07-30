@@ -7,26 +7,31 @@ define([
     helper) {
 
 
-    var flow = sebastian.flow("examples.delay")
-        .step("one", function() {
+    return {
+        execute : function(el) {
 
-            return helper.appendStepCompleteMessage.call(this.$el, "one");
-        })
-        .delay(1000)
-        .step("two", function() {
+            var flow = sebastian.flow("examples.delay")
+                .step("one", function() {
 
-            return helper.appendStepCompleteMessage.call(this.$el, "two");
+                    return helper.appendStepCompleteMessage.call(el, "one");
+                })
+                .delay(1000)
+                .step("two", function() {
 
-        })
-        .delay(1000)
-        .step("three", function() {
+                    return helper.appendStepCompleteMessage.call(el, "two");
 
-            return helper.appendStepCompleteMessage.call(this.$el, "three");
+                })
+                .delay(1000)
+                .step("three", function() {
+                    return helper.appendStepCompleteMessage.call(el, "three");
 
-        })
-        .delay(1000);
+                })
+                .delay(1000);
 
-    return flow;
+            return flow.begin();
+
+        }
+    };
 
 
 });

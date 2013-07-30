@@ -7,32 +7,36 @@ define([
     helper) {
 
 
-    var flow = sebastian.flow("examples.waterfall")
-        .step("one", function() {
+    return {
+        execute : function(el) {
 
-            return helper.appendStepCompleteMessage.call(this.$el, "one", 500);
+            return sebastian.flow("examples.waterfall")
+                .step("one", function() {
+                    return helper.appendStepCompleteMessage.call(el, "one", 500);
+                })
+                .step("two", function() {
 
-        })
-        .step("two", function() {
+                    var deferred = $.Deferred();
 
-            var deferred = $.Deferred();
+                    helper.appendStepCompleteMessage.call(el, "two", 500)
+                        .then(function() {
+                            deferred.resolve("stepTwoResult");
+                        });
 
-            helper.appendStepCompleteMessage.call(this.$el, "two", 500)
-                .then(function() {
-                    deferred.resolve("stepTwoResult");
-                });
+                    return deferred;
+                })
+                .step("three", function(stepOneArg) {
 
-            return deferred;
-        })
-        .step("three", function(stepOneArg) {
+                    return helper.appendSuccessMessage.call(el,
+                        "Step three completed, received arg " + stepOneArg +
+                            " from previous step.", 500);
 
-            return helper.appendSuccessMessage.call(this.$el,
-                "Step three completed, received arg " + stepOneArg + " from previous step.", 500);
-
-        })
-        .waterfall();
-
-    return flow;
+                })
+                .waterfall()
+                .begin();
 
 
-})
+        }
+    };
+
+});

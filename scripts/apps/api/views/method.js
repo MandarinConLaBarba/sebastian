@@ -56,14 +56,15 @@ define([
 
             });
 
+            this.$el.find('.btnShowExamplePanel').hide();
             this.$el.find('.btnRunExamplePanel').hide();
             this.$el.find('.panel.demo').hide();
 
             if (this.exampleViews &&
                 this.exampleViews.length &&
                 this.exampleViews[0].options.executable) {
+                this.$el.find('.btnShowExamplePanel').show();
                 this.$el.find('.btnRunExamplePanel').show();
-                this.$el.find('.panel.demo').show();
             }
 
         },
@@ -115,24 +116,28 @@ define([
                 this.exampleViews[0].options.executable) {
 
                 var demoContainer = this.$el.find('.demo'),
-                    flow = this.exampleViews[0].flow();
+                    demo = this.exampleViews[0].flow();
                 demoContainer.empty();
 
+                this.runFlowDirectly(demo, demoContainer);
 
-                var direct = ["examples.context"];
 
-                if (direct.indexOf(flow.name) > -1) {
-                    this.runFlowDirectly(flow, demoContainer);
-                } else {
-                    this.runFlowViaExecution(flow, demoContainer);
-                }
+
+
+//                var direct = ["examples.context"];
+//
+//                if (direct.indexOf(demo.name) > -1) {
+//                    this.runFlowDirectly(demo, demoContainer);
+//                } else {
+//                    this.runFlowViaExecution(demo, demoContainer);
+//                }
 
             }
         },
 
-        runFlowViaExecution : function(flow, demoContainer) {
+        runFlowViaExecution : function(demo, demoContainer) {
 
-            var executor = flow.create();
+            var executor = demo.create();
 
             executor.context({ $el : demoContainer});
             exampleHelper.appendFlowStartedMessage.call(demoContainer, executor.flow.name)
@@ -145,15 +150,14 @@ define([
 
         },
 
-        runFlowDirectly : function(flow, demoContainer) {
+        runFlowDirectly : function(demo, demoContainer) {
 
-            //TODO: fix this...this is nasty
-            flow.ctx.$el = demoContainer;
+            exampleHelper.appendFlowStartedMessage.call(demoContainer, demo.name)
 
-            var deferred = flow.begin();
+            var deferred = demo.call(this, demoContainer);
 
             deferred.done(function() {
-                exampleHelper.appendFlowCompleteMessage.call(demoContainer, flow.name)
+                exampleHelper.appendFlowCompleteMessage.call(demoContainer, demo.name)
             });
         }
 

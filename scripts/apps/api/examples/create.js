@@ -1,31 +1,42 @@
 define([
     "jquery",
-    "sebastian"], function(
+    "sebastian",
+    "apps/api/examples/helper"], function(
     $,
-    sebastian) {
+    sebastian,
+    helper) {
 
-    var flow = sebastian.flow("examples.create")
-        .step("one", function() {
-            this.someDate = new Date();
-            //do something..
-        })
-        .step("two", function() {
-            //do something else..
-        });
+    return {
+        execute : function(demoContainer) {
 
-    //Create a flow/executor
-    var executor = flow.create();
+            var flow = sebastian.flow("examples.create")
+                .step("one", function() {
+                    helper.appendSuccessMessage.call(demoContainer,
+                        "this.someData value: " + this.someData);
+                });
 
-    executor
-        .context({})
-        .execute();
+            //Create a flow/executor
+            var executor = flow.create();
 
-    var executor2 = flow.create();
+            executor
+                .context({
+                    someData : "flowContextOne"
+                })
+                .execute();
 
-    //someData variable for first execution will not be overwritten
-    executor2
-        .context({})
-        .execute();
+
+            var executor2 = flow.create();
+
+            //someData variable for first execution will not be overwritten
+            return executor2
+                .context({
+                    someData : "flowContextTwo"
+                })
+                .execute();
+
+        }
+    };
+
 
 
 });

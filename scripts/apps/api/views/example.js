@@ -33,12 +33,11 @@ define([
             var self = this;
 
             require([
-                this.options.target,
-                "text!" + this.options.target + ".js"
-            ], function(exampleFlow, exampleSource) {
-                self.exampleFlow = exampleFlow;
+                this.options.target
+            ], function(exampleFlow) {
+                self.exampleFlow = exampleFlow.execute;
                 var templateData = {
-                    exampleSource : prettify.prettyPrintOne(exampleSource)
+                    exampleSource : prettify.prettyPrintOne(exampleFlow.execute.toString())
                 };
                 self.$el.append(self.template(templateData));
             });

@@ -7,31 +7,36 @@ define([
     helper) {
 
 
-    var flow = sebastian.flow("examples.onFailure().loop")
-        .step("one", function() {
-            return helper.appendStepCompleteMessage.call(this.$el, "one", 1000);
+    return {
+        execute : function(el) {
 
-        })
-        .step("two", function() {
+            return sebastian.flow("examples.onFailure().loop")
+                .step("one", function() {
+                    return helper.appendStepCompleteMessage.call(el, "one", 1000);
 
-            helper.appendMessage.call(this.$el, "Entering step two...");
-            if (typeof this.loopCount == "undefined") {
-                this.loopCount = 0;
-            }
+                })
+                .step("two", function() {
 
-            this.loopCount++;
+                    helper.appendMessage.call(el, "Entering step two...");
+                    if (typeof this.loopCount == "undefined") {
+                        this.loopCount = 0;
+                    }
 
-            //Limit the # of loops to 3
-            if (this.loopCount >= 3) {
-                return $.Deferred().reject("timeoutFailureCode");
-            }
+                    this.loopCount++;
 
-            return $.Deferred().reject("someFailureCode");
+                    //Limit the # of loops to 3
+                    if (this.loopCount >= 3) {
+                        return $.Deferred().reject("timeoutFailureCode");
+                    }
 
-        })
-        .onFailure("someFailureCode").loop();
+                    return $.Deferred().reject("someFailureCode");
 
-    return flow;
+                })
+                .onFailure("someFailureCode").loop()
+                .begin();
+
+        }
+    };
 
 
 });

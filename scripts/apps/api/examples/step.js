@@ -7,18 +7,22 @@ define([
     helper) {
 
 
-    var flow = sebastian.flow("examples.step")
-        .step("one", function() {
+    return {
+        execute : function(el) {
 
-            return helper.appendStepCompleteMessage.call(this.$el, "one", 1000);
-        })
-        .step("two", function() {
+            return sebastian.flow("examples.step")
+                .step("one", function() {
+                    return helper.appendStepCompleteMessage.call(el, "one", 1000);
+                })
+                .step("two", function() {
+                    return helper.appendStepCompleteMessage.call(el, "two", 500);
+                })
+                .begin();
 
-            return helper.appendStepCompleteMessage.call(this.$el, "two", 500);
+        }
+    };
 
-        });
 
-    return flow;
 
 
 });
