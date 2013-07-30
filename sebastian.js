@@ -50,6 +50,7 @@
 
     /**
      * Execution constructor
+     *
      * @param flow
      * @api private
      */
@@ -76,7 +77,8 @@
     };
 
     /**
-     * Execute the flow
+     * Start/begin an execution. An execution is essentially an instance of a flow, with its own scope/context that
+     * is isolated from other instances.
      *
      * @returns {Deferred}
      */
@@ -697,7 +699,27 @@
             return self;
         };
 
+        /**
+         * Handle success by starting the flow over
+         */
+        onSuccessOptions.loop = function() {
+            self.defaultSuccessDelegate = self;
+            return self;
+        };
+
         return onSuccessOptions;
+    };
+
+    /**
+     * Alias for onSuccess().loop()
+     *
+     *
+     */
+    flow.prototype.loop = function() {
+
+        this.onSuccess().loop();
+        return this;
+
     };
 
 
