@@ -32,19 +32,25 @@ body {
     float: left;
     margin-left: 5px;
     border: 1px solid #003f81;
+    font-size: 50px;
+    text-align: center;
 }
 
 .splash-block.splash-block-one {
     background-color: #4e7dff;
+    color: #d9fff1;
 }
 .splash-block.splash-block-two {
     background-color: #73a0ff;
+    color: #d9fff1;
 }
 .splash-block.splash-block-three {
     background-color: #a9dbff;
+    color: #4e7dff;
 }
 .splash-block.splash-block-four {
     background-color: #d9fff1;
+    color: #4e7dff;
 }
 
 #logo {
