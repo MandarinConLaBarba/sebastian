@@ -29,7 +29,7 @@ define([
         },
 
         render : function() {
-
+            this.$el.attr("data-spy-id", this.model.get("safeFullName"));
             this.$el.append(this.template(this.model.toJSON()));
             this.showPanel(null, ".doc");
 
@@ -126,22 +126,6 @@ define([
                 } else {
                     this.runFlowViaExecution(flow, demoContainer);
                 }
-
-
-
-//                var executor = this.exampleViews[0].flow().create(),
-//                    demoContainer = this.$el.find('.demo');
-//                demoContainer.empty();
-//                exampleHelper.appendFlowStartedMessage.call(demoContainer, executor.flow.name)
-
-
-
-//                executor.context({ $el : demoContainer});
-//                var execution = executor.execute();
-//
-//                execution.done(function() {
-//                    exampleHelper.appendFlowCompleteMessage.call(demoContainer, executor.flow.name)
-//                });
 
             }
         },

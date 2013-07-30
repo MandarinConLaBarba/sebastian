@@ -7,6 +7,7 @@
     "jquery": "*",
     "requirejs": "*",
     "sebastian": "0.2.1",
-    "google-code-prettify": "~1.0.0"
+    "google-code-prettify": "~1.0.0",
+    "jquery-scrollspy": "https://github.com/sxalexander/jquery-scrollspy.git"
   }
 }

@@ -11,89 +11,97 @@
     <a href="https://github.com/MandarinConLaBarba/sebastian/">
         <img style="position: absolute; top: 0; left: 0; border: 0;"
              src="https://s3.amazonaws.com/github/ribbons/forkme_left_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+    <div id="side-nav-container">
+    </div>
 
     <div class="row">
-        <div class="twelve columns centered">
+        <div class="ten columns centered">
             <h1>Sebastian</h1>
 
             <h3>Simple Flow Control For Node.js and the browser</h3>
             <p>
-                Sebastian is a tool for separating logic into small, manageable chunks of testable code. It builds on jQuery's
+                Sebastian is a tool for separating logic into small, manageable chunks of testable code. It leverages on jQuery's
                 awesome Deferred API.
             </p>
+            <a name="intro"/>
+            <div class="spied" data-spy-id="intro">
+                <h3>Installation</h3>
 
-            <h3>Installation</h3>
+                <p>Works as a node module, or in the browser as an AMD module or traditional jQuery plugin.</p>
 
-            <p>Works as a node module, or in the browser as an AMD module or traditional jQuery plugin.</p>
+                <ul>
+                    <li>
+                        <code>npm install sebastian</code>
+                    </li>
+                    <li>
+                        <code>bower install sebastian</code>
+                    </li>
+                </ul>
 
-            <ul>
-                <li>
-                    <code>npm install sebastian</code>
-                </li>
-                <li>
-                    <code>bower install sebastian</code>
-                </li>
-            </ul>
+                <h3>Simplify!</h3>
 
-            <h3>Simplify!</h3>
+                <p>
+                    Take complex code like this example:
+                </p>
 
-            <p>
-                Take complex code like this example:
-            </p>
+                <script src="https://gist.github.com/MandarinConLaBarba/5055837.js"></script>
 
-            <script src="https://gist.github.com/MandarinConLaBarba/5055837.js"></script>
+                <p>And turn it into something easy to read and test:</p>
 
-            <p>And turn it into something easy to read and test:</p>
+                <script src="https://gist.github.com/MandarinConLaBarba/5055899.js"></script>
 
-            <script src="https://gist.github.com/MandarinConLaBarba/5055899.js"></script>
+                <p>Now just test one step at a time!</p>
 
-            <p>Now just test one step at a time!</p>
+                <script src="https://gist.github.com/MandarinConLaBarba/5056009.js"></script>
+            </div>
 
-            <script src="https://gist.github.com/MandarinConLaBarba/5056009.js"></script>
 
-            <h3>Anatomy of a step</h3>
+            <a name="anatomy"/>
+            <div class="spied" data-spy-id="anatomy">
+                <h3>Anatomy of a step</h3>
 
-            <p>A step is comprised of:
+                <p>A step is comprised of:
 
-            <ul>
-                <li>a name</li>
-                <li>a callback function or another flow</li>
-            </ul>
-            </p>
+                <ul>
+                    <li>a name</li>
+                    <li>a callback function or another flow</li>
+                </ul>
+                </p>
 
-            <h4>Keep it simple</h4>
+                <h4>Keep it simple</h4>
 
-            <p>
-                A step should ideally do one or two things - it should not be complicated. Try to keep it short and sweet.
-                This is especially useful if you write tests first.
-            </p>
+                <p>
+                    A step should ideally do one or two things - it should not be complicated. Try to keep it short and sweet.
+                    This is especially useful if you write tests first.
+                </p>
 
-            <h4>Return Deferreds for Asynchronous Operations</h4>
+                <h4>Return Deferreds for Asynchronous Operations</h4>
 
-            <p>
-                If the step involves an asynchronous call, you can return a jQuery Deferred or Promise to make sure the
-                next step in the flow doesn't execute. If you don't return a Deferred, execution of next step will begin
-                immediately.
-            </p>
+                <p>
+                    If the step involves an asynchronous call, you can return a jQuery Deferred or Promise to make sure the
+                    next step in the flow doesn't execute. If you don't return a Deferred, execution of next step will begin
+                    immediately.
+                </p>
 
-            <h4>Argument Chains</h4>
+                <h4>Argument Chains</h4>
 
-            <p>Values returned from upstream step are passed as arguments to downstream step. If step "one" returns
-                "blah", the first argument to step two will be "blah".
-            </p>
+                <p>Values returned from upstream step are passed as arguments to downstream step. If step "one" returns
+                    "blah", the first argument to step two will be "blah".
+                </p>
 
-            <h3>Anatomy of a flow</h3>
+                <h3>Anatomy of a flow</h3>
 
-            <p>A flow is comprised of:
+                <p>A flow is comprised of:
 
-            <ul>
-                <li>One or more steps</li>
-                <li>Zero or more failure callbacks</li>
-                <li>Zero or more failure delegates</li>
-                <li>An optional success delegate</li>
-                <li>An optional context</li>
-            </ul>
-            </p>
+                <ul>
+                    <li>One or more steps</li>
+                    <li>Zero or more failure callbacks</li>
+                    <li>Zero or more failure delegates</li>
+                    <li>An optional success delegate</li>
+                    <li>An optional context</li>
+                </ul>
+                </p>
+            </div>
 
             <h3>Flow API</h3>
 
@@ -109,10 +117,16 @@
 
         var require = {
             baseUrl : "scripts",
+            shim : {
+                "jquery-scrollspy" : {
+                    deps : ['jquery']
+                }
+            },
             paths : {
                 "prettify" : "vendor/google-code-prettify/src/prettify",
                 "sebastian" : "vendor/sebastian/sebastian",
                 "jquery" : "vendor/jquery/jquery.min",
+                "jquery-scrollspy" : "vendor/jquery-scrollspy/jquery-scrollspy",
                 "backbone" : "vendor/backbone-amd/backbone-min",
                 "underscore" : "vendor/underscore-amd/underscore-min",
                 "text" : "vendor/requirejs-plugins/text"

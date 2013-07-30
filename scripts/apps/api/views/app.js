@@ -3,7 +3,14 @@ define([
     "backbone",
     "underscore",
     "apps/api/models/method",
-    "apps/api/views/method"], function($, Backbone, _, MethodModel, MethodView) {
+    "apps/api/views/method",
+    "apps/api/views/nav"], function(
+    $,
+    Backbone,
+    _,
+    MethodModel,
+    MethodView,
+    NavView) {
 
     return Backbone.View.extend({
 
@@ -14,7 +21,8 @@ define([
         initialize : function() {},
 
         render : function() {
-            var self = this;
+            var self = this,
+                methods = new Backbone.Collection();
 
             $.getJSON("doc.json")
                 .then(function(comments) {
@@ -30,9 +38,11 @@ define([
                         .each(function(comment) {
                             var method = new MethodModel(comment),
                                 methodContainer = $(document.createElement('div'))
-                                    .addClass("methodContainer");
+                                    .addClass("methodContainer")
+                                    .addClass("spied");
 
-                            self.$el.append(methodContainer);
+                            self.$el.find("#apiMethodContainer")
+                                .append(methodContainer);
 
                             var executableExamples = [
                                     "onSuccess().jumpTo",
@@ -64,7 +74,15 @@ define([
                                 model : method,
                                 el : methodContainer
                             }).render();
+
+                            methods.push(method);
+
                         });
+
+                    new NavView({
+                        methods : methods,
+                        el : self.$el.find('#side-nav-container')
+                    }).render();
 
                 });
 

@@ -8,3 +8,14 @@
 .gist-file .highlight {
 
 }
+
+#side-nav-container {
+    position: fixed;
+    right: 50px;
+    top: 100px;
+    width: 180px;
+}
+
+body {
+    padding-bottom: 600px;
+}

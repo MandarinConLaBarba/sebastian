@@ -1,0 +1,9 @@
+{
+  "name": "jquery-scrollspy",
+  "version": "0.0.0",
+  "commit": "2edc2d98e0256cb79cecce61e8c17f2a0a3b8952",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sxalexander/jquery-scrollspy.git"
+  }
+}

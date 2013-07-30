@@ -1,8 +1,15 @@
-define(["jquery", "backbone", "apps/api/views/app"], function($, backbone, AppView) {
+define([
+    "jquery",
+    "backbone",
+    "apps/api/views/app",
+    "jquery-scrollspy"], function(
+    $,
+    backbone,
+    AppView) {
 
 
     new AppView({
-        el : $('#apiMethodContainer')
+        el : $('body')
     }).render();
 
 

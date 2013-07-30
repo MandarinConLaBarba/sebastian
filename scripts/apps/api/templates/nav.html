@@ -1,0 +1,14 @@
+<ul class="side-nav">
+
+    <li class="active" id="spy-nav-intro"><a href="#intro">Intro</a></li>
+    <li id="spy-nav-anatomy"><a href="#anatomy">Building Steps and Flows</a></li>
+    <li class="divider"></li>
+    <% for (var index = 0; index < methods.length; index++){ %>
+    <% var method = methods[index]; %>
+    <li id="spy-nav-<%= method.safeFullName %>"><a href="#<%= method.fullName %>"><%= method.fullName %></a></li>
+
+
+    <% } %>
+
+
+</ul>
