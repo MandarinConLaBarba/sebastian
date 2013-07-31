@@ -4,6 +4,7 @@ define([
     "underscore",
     "apps/api/views/example",
     "apps/api/examples/helper",
+    "apps/api/util/eventManager",
     "text!apps/api/templates/method.html"
 ], function(
     $,
@@ -11,6 +12,7 @@ define([
     _,
     ExampleView,
     exampleHelper,
+    eventManager,
     theTemplate) {
 
 
@@ -128,7 +130,12 @@ define([
             var deferred = demo.call(this, demoContainer);
 
             deferred.done(function() {
-                exampleHelper.appendFlowCompleteMessage.call(demoContainer, demo.name)
+                exampleHelper.appendFlowCompleteMessage.call(demoContainer, demo.name);
+                //trigger this after a second, allowing the demo div container to
+                //expand before resetting the scrollspy dimensions
+                setTimeout(function() {
+                    eventManager.trigger('refresh-scrollspy-requested');
+                }, 1000);
             });
         }
 

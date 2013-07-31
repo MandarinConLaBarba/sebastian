@@ -3,12 +3,14 @@ define([
     "backbone",
     "underscore",
     "apps/api/views/base",
+    "apps/api/util/eventManager",
     "text!apps/api/templates/nav.html"
 ], function(
     $,
     Backbone,
     _,
     BaseView,
+    eventManager,
     theTemplate) {
 
 
@@ -20,6 +22,13 @@ define([
 
         },
 
+        initialize : function() {
+            var self = this;
+            eventManager.on("refresh-scrollspy-requested", function() {
+                self.wireUpScrollSpy();
+            });
+        },
+
         render : function() {
 
             var json = this.options.methods.toJSON()
@@ -27,8 +36,15 @@ define([
                 methods : json
             }));
 
+            this.wireUpScrollSpy();
+
+        },
+
+        wireUpScrollSpy : function() {
 
             var self = this;
+
+            eventManager.unbindScroll();
 
             $('.spied').each(function() {
                 var position = $(this).position();
@@ -39,10 +55,6 @@ define([
                         self.$el.find("li").removeClass("active")
                         var spyId = $(element).attr("data-spy-id");
                         self.$el.find("#spy-nav-" + spyId).addClass("active")
-                    },
-                    onLeave: function(element, position) {
-
-
                     }
                 });
             });
