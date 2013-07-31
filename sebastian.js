@@ -34,6 +34,13 @@
             return this.callback.apply(ctx, args);
         },
 
+        /**
+         * Create a shallow copy/clone
+         *
+         * @param source
+         * @api private
+         * @return object
+         */
         clone : function(source) {
 
             var clone = {};
