@@ -6,23 +6,23 @@ define([
     sebastian,
     _) {
 
-    var flow = sebastian.flow("ui.splash")
+    return sebastian.flow("ui.splash")
         .step("one", function() {
 
             this.blocks = [];
             var self = this,
-                block = function(num) {
-                self.blocks.push($(document.createElement('div'))
-                    .append('*')
-                    .addClass("splash-block splash-block-" + num)
-                    .appendTo(self.$el));
-            };
+                addBlock = function(num) {
+                    self.blocks.push($(document.createElement('div'))
+                        .append('*')
+                        .addClass("splash-block splash-block-" + num)
+                        .appendTo(self.$el));
+                };
             this.$el.empty();
 
-            block("one");
-            block("two");
-            block("three");
-            block("four");
+            addBlock("one");
+            addBlock("two");
+            addBlock("three");
+            addBlock("four");
 
         })
         .step("two", function() {
@@ -39,8 +39,5 @@ define([
             });
         })
         .delay(8000);
-
-
-    return flow;
 
 });

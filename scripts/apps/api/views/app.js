@@ -47,10 +47,12 @@ define([
                                 .append(methodContainer);
 
                             var executableExamples = [
-                                    "onSuccess().jumpTo",
-                                    "onFailure().jumpTo",
-                                    "onFailure().handleWith",
-                                    "onFailure().loop",
+                                    "loop",
+                                    "onSuccess.loop",
+                                    "onSuccess.jumpTo",
+                                    "onFailure.jumpTo",
+                                    "onFailure.handleWith",
+                                    "onFailure.loop",
                                     "once",
                                     "waterfall",
                                     "step",
@@ -64,13 +66,13 @@ define([
                                 ],
                                 examples = executableExamples.concat([]);
 
-                            if (examples.indexOf(method.get("ctx").name) > -1 &&
-                                method.get("ctx").constructor != "execution") {
+//                            if (examples.indexOf(method.get("exampleName")) > -1 &&
+//                                method.get("ctx").constructor != "execution") {
                                 method.set("examples", [{
-                                    executable : executableExamples.indexOf(method.get("ctx").name) > -1 ? true : false,
-                                    path : "apps/api/examples/" + method.get("ctx").name
+                                    executable : executableExamples.indexOf(method.get("ctx").name) > -1 ? true : true,
+                                    path : "apps/api/examples/" + method.get("exampleName")
                                 }]);
-                            }
+                            //}
 
                             new MethodView({
                                 model : method,

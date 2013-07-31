@@ -7,30 +7,30 @@ define([
     helper) {
 
     return {
-        execute : function(demoContainer) {
+        execute : function(el) {
 
             var flow = sebastian.flow("examples.create")
                 .step("one", function() {
-                    helper.appendSuccessMessage.call(demoContainer,
+                    helper.appendSuccessMessage.call(el,
                         "this.someData value: " + this.someData);
                 });
 
-            //Create a flow/executor
-            var executor = flow.create();
+            //Create a flow/execution
+            var execution = flow.create();
 
-            executor
+            execution
                 .context({
-                    someData : "flowContextOne"
+                    someData : "Data that is private to execution <u>one</u> of flow " + flow.name
                 })
                 .execute();
 
-
-            var executor2 = flow.create();
+            //Create another flow/execution
+            var execution = flow.create();
 
             //someData variable for first execution will not be overwritten
-            return executor2
+            return execution
                 .context({
-                    someData : "flowContextTwo"
+                    someData : "Data that is private to execution <u>two</u> of flow " + flow.name
                 })
                 .execute();
 

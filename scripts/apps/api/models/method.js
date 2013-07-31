@@ -10,6 +10,7 @@ define(["backbone"], function(Backbone) {
 
             this.set("fullName", parent + "." + ctx.name + "()");
             this.set("safeFullName", this.get("fullName").replace(/[\.\(\)]/g,'-'));
+            this.set("exampleName", this.get("fullName").replace('flow.', '').replace(/[\(\)]/g,''))
 
         }
 

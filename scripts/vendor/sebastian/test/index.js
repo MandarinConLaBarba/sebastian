@@ -1110,6 +1110,75 @@
 
         });
 
+        describe("onSuccess", function(){
+
+            describe("loop", function(){
+
+                beforeEach(function() {
+                    this.result = target.onSuccess().loop();
+                });
+
+                it("should set the defaultSuccessDelegate", function() {
+
+                    target.defaultSuccessDelegate.should.equal(target);
+
+                });
+
+                it("should return the flow", function(){
+
+                    this.result.should.equal(target);
+
+                });
+
+            });
+
+            describe("jumpTo", function(){
+
+                beforeEach(function() {
+
+                    this.expectedDelegateFlow = flow("secondFlow");
+                    this.result = target
+                        .onSuccess()
+                        .jumpTo(this.expectedDelegateFlow);
+                });
+
+
+                it("should do something", function(){
+
+                    target.defaultSuccessDelegate.should.equal(this.expectedDelegateFlow);
+
+                });
+
+                it("should return the flow", function(){
+
+                    this.result.should.equal(target);
+
+                });
+
+            });
+
+        });
+
+        describe("loop", function(){
+
+            beforeEach(function() {
+                this.result = target.loop();
+            });
+
+            it("should set the defaultSuccessDelegate", function() {
+
+                target.defaultSuccessDelegate.should.equal(target);
+
+            });
+
+            it("should return the flow", function(){
+
+                this.result.should.equal(target);
+
+            });
+
+        });
+
         describe("modes", function(){
 
             beforeEach(function() {

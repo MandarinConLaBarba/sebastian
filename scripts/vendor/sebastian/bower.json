@@ -1,6 +1,6 @@
 {
   "name": "sebastian",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "main": [
     "./sebastian.js"
   ],
@@ -12,10 +12,10 @@
     "underscore-amd": "~1.4.4",
     "chai": "~1.5.0"
   },
-  "gitHead": "3b41c5c61de507908866649d4b532ddc02bbc6d2",
+  "gitHead": "609d2558cffd0a4a7c4888ab36324f3f2a1723fa",
   "readme": "# Sebastian\n\n##Intro\n\nSebastian is a flow control library aimed at encouraging developers to write organized, testable code. It works in the browser\nor with Node.js.\n\n## Rationale\n\nThere are many flow-control libraries out there, but none that I am quite satisfied with at the moment. [Async](https://github.com/caolan/async)\nis great, but I don't agree with Node.js-style callback conventions and I don't like mixing success and error condition\nlogic. Also, I have found Async-wrapped code to be difficult to test. Sebastian is built to encourage construction of discrete chunks\nof manageable code that can be easily tested. I'm a big fan of Deferreds. Sebastian uses jQuery Deferred $.when() wrapper\nto treat asynchronous and synchronous steps/code the same.\n\n## Dependencies\n\n* For Node.js, [jquery-deferred](https://github.com/zzdhidden/node-jquery-deferred), but Q support may be added at a later date.\n* For browser environments, jQuery.\n\n## Documentation\n\nFor full documentation, check out the [Sebastian GitHub page](http://mandarinconlabarba.github.com/sebastian/).\n\n## Getting started\n\n### To use as a Node.js module, install with NPM, or add as a dependency in your package.json.\n\n```\nnpm install sebastian\n```\n\nThen, require the module and add a flow:\n\n```\nvar flow = require(\"sebastian\").flow;\n\nflow(\"helloFlow\")\n    .step(\"one\", function() {\n        console.log(\"hello..\");\n    }).step(\"two\", function() {\n        console.log(\"hello 2..\");\n    }).begin();\n```\n\nThis creates a flow called \"helloFlow\", adds to steps two the flow, and starts the flow.\n\n### To use with an AMD module loader (only tested w/ RequireJS):\n\n```\n    require([\"jquery\", \"path/to/sebastian\"], function($, sebastian) {\n\n        //call the local definition\n        sebastian.flow(\"blah\")\n                .step(\"one\", function() {\n                    console.log(\"step one..\");\n                })\n                .step(\"two\", function() {\n                    console.log(\"step two..\");\n                })\n                .begin();\n\n    });\n```\n\n### To use with old-school sequential script tags:\n\n```\n<script type=\"text/javascript\" src=\"vendor/jquery/jquery.min.js\"></script>\n<script type=\"text/javascript\" src=\"/sebastian.js\"></script>\n\n<script type=\"text/javascript\">\n\n    $.Flow(\"firstFlow\")\n            .step(\"one\", function() {\n                console.log(\"executing step one in firstFlow...\");\n            })\n            .step(\"two\", function() {\n                console.log(\"executing step two in firstFlow...\");\n            }).begin();\n\n\n</script>\n\n```\n\n## Tests/Specs\n\n* [Tests](test/index.js)\n* [Specs](test/spec.md)\n",
   "readmeFilename": "README.md",
-  "_id": "sebastian@0.2.1",
+  "_id": "sebastian@0.2.3",
   "description": "##Intro",
   "repository": {
     "type": "git",
