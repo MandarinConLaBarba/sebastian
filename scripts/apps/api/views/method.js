@@ -45,7 +45,6 @@ define([
 
             _.each(this.model.get("examples"), function(example) {
                 var exampleView = new ExampleView({
-                    executable : example.executable,
                     target : example.path,
                     el : exampleContainer
                 });
@@ -61,8 +60,7 @@ define([
             this.$el.find('.panel.demo').hide();
 
             if (this.exampleViews &&
-                this.exampleViews.length &&
-                this.exampleViews[0].options.executable) {
+                this.exampleViews.length) {
                 this.$el.find('.btnShowExamplePanel').show();
                 this.$el.find('.btnRunExamplePanel').show();
             }
@@ -106,14 +104,12 @@ define([
 
         },
 
-
         showDemoPanel : function(e) {
 
             this.showPanel(e, '.demo');
 
             if (this.exampleViews &&
-                this.exampleViews.length &&
-                this.exampleViews[0].options.executable) {
+                this.exampleViews.length) {
 
                 var demoContainer = this.$el.find('.demo'),
                     demo = this.exampleViews[0].flow();
@@ -121,34 +117,9 @@ define([
 
                 this.runFlowDirectly(demo, demoContainer);
 
-
-
-
-//                var direct = ["examples.context"];
-//
-//                if (direct.indexOf(demo.name) > -1) {
-//                    this.runFlowDirectly(demo, demoContainer);
-//                } else {
-//                    this.runFlowViaExecution(demo, demoContainer);
-//                }
-
             }
         },
 
-        runFlowViaExecution : function(demo, demoContainer) {
-
-            var executor = demo.create();
-
-            executor.context({ $el : demoContainer});
-            exampleHelper.appendFlowStartedMessage.call(demoContainer, executor.flow.name)
-            var execution = executor.execute();
-
-            execution.done(function() {
-                exampleHelper.appendFlowCompleteMessage.call(demoContainer, executor.flow.name)
-            });
-
-
-        },
 
         runFlowDirectly : function(demo, demoContainer) {
 

@@ -46,33 +46,9 @@ define([
                             self.$el.find("#apiMethodContainer")
                                 .append(methodContainer);
 
-                            var executableExamples = [
-                                    "loop",
-                                    "onSuccess.loop",
-                                    "onSuccess.jumpTo",
-                                    "onFailure.jumpTo",
-                                    "onFailure.handleWith",
-                                    "onFailure.loop",
-                                    "once",
-                                    "waterfall",
-                                    "step",
-                                    "delay",
-                                    "context",
-                                    "skip",
-                                    "startOn",
-                                    "parallel",
-                                    "begin",
-                                    "create"
-                                ],
-                                examples = executableExamples.concat([]);
-
-//                            if (examples.indexOf(method.get("exampleName")) > -1 &&
-//                                method.get("ctx").constructor != "execution") {
                                 method.set("examples", [{
-                                    executable : executableExamples.indexOf(method.get("ctx").name) > -1 ? true : true,
                                     path : "apps/api/examples/" + method.get("exampleName")
                                 }]);
-                            //}
 
                             new MethodView({
                                 model : method,
@@ -92,13 +68,9 @@ define([
 
             SplashFlow.context({
                     $el : this.$el.find("#splash-effect")
-                });
-
-            var loop = function() {
-                SplashFlow.begin().done(loop);
-            };
-
-            loop();
+                })
+                .loop()
+                .begin();
 
         }
 
