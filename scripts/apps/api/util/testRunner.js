@@ -8,6 +8,9 @@ define([
     return {
 
         run : function(targetElement, filter) {
+
+            targetElement.empty();
+
             mocha.setup({
                 grep : filter,
                 reporter: function (runner) {

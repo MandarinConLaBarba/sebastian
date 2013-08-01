@@ -45,7 +45,7 @@ define([
 
         },
 
-        example : function() {
+        demo : function() {
             return this.example;
         }
 

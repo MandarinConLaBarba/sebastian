@@ -87,7 +87,7 @@ define([
             //hide other panels
             this.hidePanels();
             //show panel just selected
-            this.$el.find(".panel" + classSelector).show();
+            this.$el.find(".panel" + classSelector).hide().slideDown();
 
         },
 
@@ -117,7 +117,7 @@ define([
                 this.exampleViews.length) {
 
                 var demoContainer = this.$el.find('.panel.demo'),
-                    demo = this.exampleViews[0].example();
+                    demo = this.exampleViews[0].demo();
                 demoContainer.empty();
 
                 this.runFlowDirectly(demo, demoContainer);
