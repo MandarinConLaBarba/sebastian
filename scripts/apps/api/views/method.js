@@ -87,7 +87,7 @@ define([
             //hide other panels
             this.hidePanels();
             //show panel just selected
-            this.$el.find(".panel" + classSelector).hide().slideDown();
+            this.$el.find(".panel" + classSelector).fadeIn();
 
         },
 
