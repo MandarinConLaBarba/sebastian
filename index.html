@@ -115,6 +115,7 @@
 
     <script type="text/javascript">
 
+        var mainPath = "apps/api/main" + (window.location.host.indexOf("localhost") > -1 && false ? "" : ".built");
         var require = {
             baseUrl : "scripts",
             shim : {
@@ -148,14 +149,17 @@
                 "chai" : "vendor/chai/chai",
                 "sinon" : "vendor/sinon/sinon",
                 "underscore" : "vendor/underscore-amd/underscore-min",
-                "text" : "vendor/requirejs-plugins/text"
+                "text" : "vendor/requirejs-plugins/text",
+                "apps/api/main" : mainPath
             }
 
         };
 
     </script>
 
-    <script type="text/javascript" data-main="apps/api/main" src="scripts/vendor/requirejs/require.js"></script>
+    <script type="text/javascript"
+            data-main="apps/api/main"
+            src="scripts/vendor/requirejs/require.js"></script>
 
     </body>
 </html>
