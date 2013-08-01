@@ -35,7 +35,7 @@ define([
             require([
                 this.options.target
             ], function(exampleFlow) {
-                self.exampleFlow = exampleFlow.execute;
+                self.example = exampleFlow.execute;
                 var templateData = {
                     exampleSource : prettify.prettyPrintOne(exampleFlow.execute.toString())
                 };
@@ -45,8 +45,8 @@ define([
 
         },
 
-        flow : function() {
-            return this.exampleFlow;
+        example : function() {
+            return this.example;
         }
 
 

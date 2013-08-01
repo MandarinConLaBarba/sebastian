@@ -31,6 +31,7 @@ define([
                     //create new method view for each comment..
                     _.chain(comments)
                         .sortBy(function(comment) {
+                            //Make sure the execution methods sort to the bottom of the list..
                             if (comment.ctx.cons &&
                                 comment.ctx.cons === "execution") {
                                 return 1;

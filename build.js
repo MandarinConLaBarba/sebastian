@@ -8,7 +8,7 @@ var dox = require("dox"),
 
 sebastian.flow("flows.generate.gh-page")
     .step("fetch-local-sebastian-js", function() {
-        return fs.readFileSync("../sebastian/sebastian.js").toString();
+        return fs.readFileSync("./scripts/vendor/sebastian/sebastian.js").toString();
     })
     .step("generate-jsdoc-annotations", function(sebastianRawJs) {
 

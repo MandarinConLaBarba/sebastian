@@ -5,6 +5,7 @@ define([
     "apps/api/views/example",
     "apps/api/examples/helper",
     "apps/api/util/eventManager",
+    "apps/api/util/testRunner",
     "text!apps/api/templates/method.html"
 ], function(
     $,
@@ -13,6 +14,7 @@ define([
     ExampleView,
     exampleHelper,
     eventManager,
+    testRunner,
     theTemplate) {
 
 
@@ -23,7 +25,8 @@ define([
         events : {
             "click .btnShowDocPanel" : "showDocPanel",
             "click .btnShowExamplePanel" : "showExamplePanel",
-            "click .btnRunExamplePanel" : "showDemoPanel"
+            "click .btnRunExamplePanel" : "showDemoPanel",
+            "click .btnRunTestPanel" : "showTestPanel"
         },
 
         initialize : function() {
@@ -113,8 +116,8 @@ define([
             if (this.exampleViews &&
                 this.exampleViews.length) {
 
-                var demoContainer = this.$el.find('.demo'),
-                    demo = this.exampleViews[0].flow();
+                var demoContainer = this.$el.find('.panel.demo'),
+                    demo = this.exampleViews[0].example();
                 demoContainer.empty();
 
                 this.runFlowDirectly(demo, demoContainer);
@@ -122,21 +125,35 @@ define([
             }
         },
 
+        showTestPanel : function(e) {
+
+            this.showPanel(e, '.test');
+
+            testRunner.run(this.$el.find(".panel.test"), this.model.get("testMatcher"));
+
+            this.triggerScrollSpyRefresh();
+
+        },
 
         runFlowDirectly : function(demo, demoContainer) {
 
             exampleHelper.appendFlowStartedMessage.call(demoContainer, demo.name)
 
-            var deferred = demo.call(this, demoContainer);
+            var deferred = demo.call(this, demoContainer),
+                self = this;
 
             deferred.done(function() {
                 exampleHelper.appendFlowCompleteMessage.call(demoContainer, demo.name);
                 //trigger this after a second, allowing the demo div container to
                 //expand before resetting the scrollspy dimensions
-                setTimeout(function() {
-                    eventManager.trigger('refresh-scrollspy-requested');
-                }, 1000);
+                self.triggerScrollSpyRefresh();
             });
+        },
+
+        triggerScrollSpyRefresh : function() {
+            setTimeout(function() {
+                eventManager.trigger('refresh-scrollspy-requested');
+            }, 1000)
         }
 
     });

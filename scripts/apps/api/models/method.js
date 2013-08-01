@@ -9,8 +9,9 @@ define(["backbone"], function(Backbone) {
                 parent = ctx.cons ? ctx.cons : "flow";
 
             this.set("fullName", parent + "." + ctx.name + "()");
+            this.set("testMatcher", (parent + " " + ctx.name).replace(/[\(\)]/g,'').replace(/\./g, " "));
             this.set("safeFullName", this.get("fullName").replace(/[\.\(\)]/g,'-'));
-            this.set("exampleName", this.get("fullName").replace('flow.', '').replace(/[\(\)]/g,''))
+            this.set("exampleName", this.get("fullName").replace('flow.', '').replace(/[\(\)]/g, ''))
 
         }
 
