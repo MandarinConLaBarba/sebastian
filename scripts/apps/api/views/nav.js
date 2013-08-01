@@ -36,6 +36,26 @@ define([
                 methods : json
             }));
 
+            var self = this;
+            this.$el.find('li')
+                .hide()
+                .css("padding-left", "50px");
+
+            var slideLeftEffect = function() {
+                return self.$el.find('li:hidden')
+                    .filter(':first')
+                    .show()
+                    .animate({
+                        "padding-left": "-=50"
+                    }, 50, function() {
+                        slideLeftEffect();
+                    });
+
+            };
+
+            slideLeftEffect();
+
+
             this.wireUpScrollSpy();
 
         },

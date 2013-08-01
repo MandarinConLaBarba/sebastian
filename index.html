@@ -115,7 +115,7 @@
 
     <script type="text/javascript">
 
-        var mainPath = "apps/api/main" + (window.location.host.indexOf("localhost") > -1 && false ? "" : ".built");
+        var mainPath = "apps/api/main" + (window.location.host.indexOf("localhost") > -1 ? "" : ".built");
         var require = {
             baseUrl : "scripts",
             shim : {
