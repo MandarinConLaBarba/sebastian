@@ -3,7 +3,8 @@ REPORTER = dot
 build:
 	@mkdir -p vendor/sinon \
 	&& wget http://sinonjs.org/releases/sinon-1.6.0.js -O vendor/sinon/sinon.js \
-	&& bower install --dev
+	&& bower install --dev \
+        && npm install
 
 clean:
 	@rm -rf vendor/
