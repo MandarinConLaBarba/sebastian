@@ -16,7 +16,7 @@ require.config({
     },
     deps : ["test/index"],
     callback : function() {
-        window.__testacular__.start();
+        window.__karma__.start();
     }
 
 });
