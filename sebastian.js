@@ -20,6 +20,8 @@
 }(this, function(root, Flow, $) {
 
     var internals = {
+
+        knownEvents : ["step-succeeded", "step-failed"],
         /**
          * Private method for executing a step
          *
@@ -32,6 +34,35 @@
          */
         step : function(ctx, args) {
             return this.callback.apply(ctx, args);
+        },
+
+        stepWithEvents : function(ctx, args, flow) {
+            var stepResult = internals.step.call(this, ctx, args);
+
+            internals.fireStepCallbacks.call(this, stepResult, flow);
+
+            return stepResult;
+        },
+
+        fireStepCallbacks : function(stepResult, flow) {
+
+            var self = this;
+            if (!flow.callbackLists) {
+                return;
+            }
+
+            if (flow.callbackLists["step-succeeded"]) {
+                $.when(stepResult).done(function() {
+                    flow.callbackLists["step-succeeded"].fire(self.name);
+                });
+            }
+
+            if (flow.callbackLists["step-failed"]) {
+                $.when(stepResult).fail(function() {
+                    flow.callbackLists["step-failed"].fire(self.name);
+                });
+            }
+
         },
 
         /**
@@ -157,6 +188,25 @@
 
     };
 
+    execution.prototype.on = function(eventName, callback) {
+
+        if (internals.knownEvents.indexOf(eventName) === -1) {
+            return this;
+        }
+
+        if (!this.callbackLists) {
+            this.callbackLists = {};
+        }
+
+        if (!this.callbackLists[eventName]) {
+            this.callbackLists[eventName] = $.Callbacks();
+        }
+
+        this.callbackLists[eventName].add(callback);
+        return this;
+
+    };
+
     /**
      * Attach a fail callback to the execution
      *
@@ -276,7 +326,8 @@
      */
     execution.prototype.modes.waterfall = function(ctx, stepsToExecute, args) {
 
-        var masterPromise = this.masterPromise,
+        var self = this,
+            masterPromise = this.masterPromise,
             lastPromise,
             chain = function(step) {
                 return function() {
@@ -296,7 +347,8 @@
                             .then(masterPromise.resolve, masterPromise.reject);
                     }
 
-                    return internals.step.call(step, ctx, args);
+                    return internals.stepWithEvents.call(step, ctx, args, self);
+
                 };
             };
 
@@ -304,7 +356,7 @@
             var step = stepsToExecute[i];
             //If no promise set, then it's the first step. Execute it and continue
             if (!lastPromise) {
-                lastPromise = $.when(internals.step.call(step, ctx, args));
+                lastPromise = $.when(internals.stepWithEvents.call(step, ctx, args, self));
                 continue;
             }
 
@@ -327,7 +379,7 @@
     execution.prototype.modes.parallel = function(ctx, stepsToExecute, args) {
         var promises = [];
         for (var index in stepsToExecute) {
-            promises.push(internals.step.call(stepsToExecute[index], ctx, args));
+            promises.push(internals.stepWithEvents.call(stepsToExecute[index], ctx, args, this));
         }
 
         return $.when.apply(null, promises);

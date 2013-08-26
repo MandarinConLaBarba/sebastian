@@ -401,6 +401,100 @@
 
             });
 
+            describe("when an execution is created", function(){
+
+                describe("when mode is waterfall", function(){
+
+                    describe("and a step is completed", function(){
+
+                        beforeEach(function() {
+                            this.execution = target
+                                .step("step.0", function() {})
+                                .step("step.1", function() {
+                                    return $.Deferred().resolve("someData");
+                                })
+                                .create();
+                        });
+
+
+                        it("should emit an event", function(){
+                            var stepsCompleted = [];
+
+                            this.execution.on('step-succeeded', function(stepName) {
+                                stepsCompleted.push(stepName);
+                            });
+
+                            this.execution.execute();
+
+                            stepsCompleted.length.should.equal(2);
+                        });
+
+                    });
+
+                    describe("and a step fails", function(){
+
+                        beforeEach(function() {
+                            this.execution = target
+                                .step("step.0", function() {})
+                                .step("step.1", function() {
+                                    return $.Deferred().reject("someData");
+                                })
+                                .create();
+                        });
+
+
+
+                        it("should emit an event", function(){
+                            var stepsFailed = [];
+
+                            this.execution.on('step-failed', function(stepName) {
+                                stepsFailed.push(stepName);
+                            });
+
+                            this.execution.execute();
+                            stepsFailed.length.should.equal(1);
+                        });
+
+
+                    });
+
+                });
+
+                describe("when mode is parallel", function(){
+
+                    describe("and a step is completed", function(){
+
+                        beforeEach(function() {
+                            this.execution = target
+                                .step("step.0", function() {})
+                                .step("step.1", function() {
+                                    return $.Deferred().resolve("someData");
+                                })
+                                .parallel()
+                                .create();
+                        });
+
+
+                        it("should emit an event", function(){
+                            var stepsCompleted = [];
+
+                            this.execution.on('step-succeeded', function(stepName) {
+                                stepsCompleted.push(stepName);
+                            });
+
+                            this.execution.execute();
+
+                            stepsCompleted.length.should.equal(2);
+                        });
+
+                    });
+
+                });
+
+
+            });
+
+
         });
 
         describe("step", function(){
